@@ -7,14 +7,17 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.template import engines
 from django.urls import path, reverse, NoReverseMatch
 from django.views.generic import TemplateView, RedirectView
+from django_htmx.http import HttpResponseLocation, trigger_client_event
 
 from django_htmx_ui.utils import ContextProperty, ContextCachedProperty, merge, to_snake_case
 
 
 class PublicTemplateView(TemplateView):
+    response = None
 
     def setup(self, request, *args, **kwargs):
         self.headers = {}
+        self.triggers = []
         self.request = request
         self.add_context('request', request)
         return super().setup(request, *args, **kwargs)
@@ -23,6 +26,8 @@ class PublicTemplateView(TemplateView):
         ret = self.on_get(request, *args, **kwargs)
         if ret:
             return ret
+        elif self.response:
+            return self.response_prepare(self.response)
         else:
             return super().get(request, *args, **kwargs)
 
@@ -33,6 +38,8 @@ class PublicTemplateView(TemplateView):
         ret = self.on_post(request, *args, **kwargs)
         if ret:
             return ret
+        elif self.response:
+            return self.response_prepare(self.response)
         else:
             return super().get(request, *args, **kwargs)
 
@@ -41,9 +48,27 @@ class PublicTemplateView(TemplateView):
 
     def render_to_response(self, context, **response_kwargs):
         response = super().render_to_response(context, **response_kwargs)
+        return self.response_prepare(response)
+
+    def response_location(self, *args, **kwargs):
+        self.response = HttpResponseLocation(*args, **kwargs)
+        return self.response
+
+    def response_prepare(self, response):
+        return self.apply_headers(self.apply_triggers(response))
+
+    def apply_headers(self, response):
         for key, value in self.headers.items():
             response[key] = value
         return response
+
+    def apply_triggers(self, response):
+        for args, kwargs in self.triggers:
+            trigger_client_event(response, *args, **kwargs)
+        return response
+
+    def trigger_client_event(self, *args, **kwargs):
+        self.triggers.append((args, kwargs))
 
     def decorators_context(self):
         return {
