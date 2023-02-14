@@ -2,6 +2,7 @@ import importlib
 import inspect
 import os
 
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.template import engines
 from django.urls import path, reverse, NoReverseMatch
@@ -151,6 +152,18 @@ class PublicTemplateView(TemplateView):
     @ContextProperty
     def project_title(self):
         return os.environ['DJANGO_SETTINGS_MODULE'].split('.')[0]
+
+    def message_info(self, message):
+        messages.info(self.request, message)
+
+    def message_success(self, message):
+        messages.success(self.request, message)
+
+    def message_warning(self, message):
+        messages.warning(self.request, message)
+
+    def message_error(self, message):
+        messages.error(self.request, message)
 
 
 class PrivateTemplateView(LoginRequiredMixin, PublicTemplateView):

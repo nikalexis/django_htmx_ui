@@ -25,10 +25,10 @@ class FormMixin:
             return self.on_post_invalid(request, *args, **kwargs)
 
     def on_post_success(self, request, *args, **kwargs):
-        pass
+        self.message_success('Saved!')
 
     def on_post_invalid(self, request, *args, **kwargs):
-        pass
+        self.message_error('Not saved!')
 
 
 class InstanceMixin(FormMixin):
@@ -69,6 +69,12 @@ class InstanceMixin(FormMixin):
     @property
     def permission(self):
         return self.instance
+
+    def on_post_success(self, request, *args, **kwargs):
+        self.message_success('%s saved!' % self.instance)
+
+    def on_post_invalid(self, request, *args, **kwargs):
+        self.message_error('%s not saved!' % self.instance)
 
 
 class CrudMixin:
