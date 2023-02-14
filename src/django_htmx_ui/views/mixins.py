@@ -1,3 +1,18 @@
+from django.core.exceptions import ViewDoesNotExist
+from django.shortcuts import redirect
+
+
+class PartialMixin:
+    redirect_partial = '/'
+
+    def get(self, request, *args, **kwargs):
+        if request.htmx:
+            return super().get(request, *args, **kwargs)
+        elif self.redirect_partial:
+            return redirect(self.redirect_partial)
+        else:
+            raise ViewDoesNotExist("View '%s' is partial." % self.__class__.__name__)
+
 
 class TabsMixin:
 
