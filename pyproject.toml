@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "django_htmx_ui"
+version = "0.1.1"
+authors = [
+  { name="Nikalexis Nikolaos", email="nikalexis@gmail.com" },
+]
+description = "Django - HTMX - Jinja powerful combination library"
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/nikalexis/django_htmx_ui"
+"Bug Tracker" = "https://github.com/nikalexis/django_htmx_ui/issues"
+
