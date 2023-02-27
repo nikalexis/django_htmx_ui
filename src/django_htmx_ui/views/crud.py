@@ -1,80 +1,5 @@
-from django_htmx_ui.utils import to_snake_case, ContextProperty, ContextCachedProperty
-
-
-class FormMixin:
-    form_initial = {}
-
-    @property
-    def form_instance(self):
-        return getattr(self, 'instance', None)
-
-    @ContextCachedProperty
-    def form(self):
-        Form = getattr(self.__class__, 'Form', None)
-        if Form:
-            if self.request.method == 'GET':
-                return Form(instance=self.form_instance, initial=self.form_initial)
-            if self.request.method == 'POST':
-                return Form(self.request.POST, instance=self.form_instance)
-
-    def on_post(self, request, *args, **kwargs):
-        if self.form.is_valid():
-            self.form.save()
-            return self.on_post_success(request, *args, **kwargs)
-        else:
-            return self.on_post_invalid(request, *args, **kwargs)
-
-    def on_post_success(self, request, *args, **kwargs):
-        self.message_success('Saved!')
-
-    def on_post_invalid(self, request, *args, **kwargs):
-        self.message_error('Not saved!')
-
-
-class InstanceMixin(FormMixin):
-
-    @classmethod
-    @property
-    def path_root(cls):
-        return '<str:pk>/' + super().path_root
-
-    @ContextProperty
-    def url(self):
-        return self.reverse(self.slug, args=[self.instance.pk])
-
-    def setup(self, request, *args, **kwargs):
-        if not hasattr(self, 'model_pk'):
-            self.model_pk = kwargs['pk']
-        return super().setup(request, *args, **kwargs)
-
-    @ContextCachedProperty
-    def instance(self):
-        return self.module.MODEL.objects.get(pk=self.model_pk)
-
-    @property
-    def instance_slug(self):
-        return '%s_%s' % (to_snake_case(self.__class__.__name__), self.instance.pk)
-
-    @ContextProperty
-    def title(self):
-        return str(self.instance)
-
-    @classmethod
-    def as_instance(cls, instance):
-        assert isinstance(instance, cls.module.MODEL)
-        obj = cls()
-        obj.model_pk = instance.pk
-        return obj
-
-    @property
-    def permission(self):
-        return self.instance
-
-    def on_post_success(self, request, *args, **kwargs):
-        self.message_success('%s saved!' % self.instance)
-
-    def on_post_invalid(self, request, *args, **kwargs):
-        self.message_error('%s not saved!' % self.instance)
+from django_htmx_ui.utils import ContextProperty
+from django_htmx_ui.views.mixins import ResponseNoContentMixin, FormMixin, InstanceMixin
 
 
 class CrudMixin:
@@ -93,17 +18,12 @@ class CrudMixin:
             raise ValueError('Pemission error')
         return super().on_post(*args, **kwargs)
 
-    @ContextProperty
-    def breadcrumb(self):
-        return {
-            self.module.TITLE: self.reverse('list') if hasattr(self.module, 'List') else '',
-            **({
-                str(self.instance): '',
-            } if hasattr(self, 'instance') else {}),
-        }
+
+class CrudCreateMixin(CrudMixin, FormMixin):
+    pass
 
 
-class CrudListMixin(CrudMixin):
+class CrudRetrieveMixin(CrudMixin):
     filter = {}
 
     def filters_get(self):
@@ -118,11 +38,7 @@ class CrudListMixin(CrudMixin):
         return self.module.MODEL.objects.filter(**self.filter).filter(**self.filters_get())
 
 
-class CrudCreateMixin(CrudMixin, FormMixin):
-    pass
-
-
-class CrudDisplayMixin(InstanceMixin, CrudMixin):
+class CrudListMixin(CrudRetrieveMixin):
     pass
 
 
@@ -130,13 +46,27 @@ class CrudUpdateMixin(InstanceMixin, CrudMixin):
     pass
 
 
-class CrudListUpdateMixin(CrudListMixin):
+class CrudDisplayMixin(InstanceMixin, CrudMixin):
     pass
 
 
-class CrudDeleteMixin(InstanceMixin, CrudMixin):
+class CrudActionMixin(ResponseNoContentMixin, InstanceMixin, CrudMixin):
     pass
 
 
-class CrudActionMixin(InstanceMixin, CrudMixin):
-    pass
+class CrudDeleteMixin(CrudActionMixin):
+
+    def on_post(self, request, *args, **kwargs):
+        count, deleted = self.instance.delete()
+        if count:
+            self.on_post_success_message(request, *args, **kwargs)
+            return self.on_post_success(request, *args, **kwargs)
+        else:
+            self.on_post_invalid_message(request, *args, **kwargs)
+            return self.on_post_invalid(request, *args, **kwargs)
+
+    def on_post_success_message(self, request, *args, **kwargs):
+        self.message_success('%s deleted!' % self.instance)
+
+    def on_post_invalid_message(self, request, *args, **kwargs):
+        self.message_error('%s not deleted!' % self.instance)

@@ -4,21 +4,26 @@ import os
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponse
+from django.shortcuts import redirect
 from django.template import engines
-from django.urls import path, reverse, NoReverseMatch
+from django.urls import re_path
 from django.views.generic import TemplateView, RedirectView
-from django_htmx.http import HttpResponseLocation, trigger_client_event
+from django_htmx.http import HttpResponseLocation, trigger_client_event, HttpResponseClientRedirect
 
-from django_htmx_ui.utils import ContextProperty, ContextCachedProperty, merge, to_snake_case
+from django_htmx_ui.utils import ContextProperty, ContextCachedProperty, merge, to_snake_case, UrlView, Location
+from django_htmx_ui.views.mixins import OriginTemplateMixin
 
 
-class PublicTemplateView(TemplateView):
+class BaseTemplateView(TemplateView):
     response = None
 
     def setup(self, request, *args, **kwargs):
         self.headers = {}
         self.triggers = []
         self.request = request
+        self.location_bar = Location.create_from_url(self.bar_url())
+        self.location_req = Location.create_from_url(request.META['PATH_INFO'])
         self.add_context('request', request)
         return super().setup(request, *args, **kwargs)
 
@@ -29,7 +34,7 @@ class PublicTemplateView(TemplateView):
         elif self.response:
             return self.response_prepare(self.response)
         else:
-            return super().get(request, *args, **kwargs)
+            return self.response_prepare(super().get(request, *args, **kwargs))
 
     def on_get(self, request, *args, **kwargs):
         pass
@@ -41,7 +46,7 @@ class PublicTemplateView(TemplateView):
         elif self.response:
             return self.response_prepare(self.response)
         else:
-            return super().get(request, *args, **kwargs)
+            return self.response_prepare(super().get(request, *args, **kwargs))
 
     def on_post(self, request, *args, **kwargs):
         pass
@@ -54,8 +59,14 @@ class PublicTemplateView(TemplateView):
         self.response = HttpResponseLocation(*args, **kwargs)
         return self.response
 
+    def response_no_content(self):
+        self.response = HttpResponse(status=204)
+        return self.response
+
     def response_prepare(self, response):
-        return self.apply_headers(self.apply_triggers(response))
+        for func in (self.apply_triggers, self.apply_headers, self.apply_location):
+            response = func(response)
+        return response
 
     def apply_headers(self, response):
         for key, value in self.headers.items():
@@ -67,13 +78,25 @@ class PublicTemplateView(TemplateView):
             trigger_client_event(response, *args, **kwargs)
         return response
 
+    def apply_location(self, response):
+        if self.request.htmx and self.location_bar != Location.create_from_url(self.bar_url()):
+            response['HX-Push-Url' if self.location_bar.push else 'HX-Replace-Url'] = str(self.location_bar)
+        return response
+
     def trigger_client_event(self, *args, **kwargs):
         self.triggers.append((args, kwargs))
 
     def decorators_context(self):
         return {
             name: getattr(self, name)
-            for name, method in inspect.getmembers(self.__class__, lambda o: isinstance(o, (ContextProperty, ContextCachedProperty)))
+            for name, method in inspect.getmembers_static(
+                self.__class__,
+                lambda o:
+                    isinstance(o, (
+                        ContextProperty,
+                        ContextCachedProperty,
+                    ))
+            )
         }
 
     def get_context_data(self, **kwargs):
@@ -85,7 +108,7 @@ class PublicTemplateView(TemplateView):
 
     def get_template_names(self):
         if not self.request.htmx:
-            return self.template_root
+            return self.template_origin
         else:
             return super().get_template_names()
 
@@ -115,48 +138,53 @@ class PublicTemplateView(TemplateView):
 
     @classmethod
     @property
-    def path_root(cls):
+    def path_route(cls):
         return cls.slug + '/'
 
     @classmethod
     @property
     def path(cls):
-        return path(cls.path_root, cls.as_view(), name=cls.slug)
+        return re_path(rf'^{cls.path_route}$', cls.as_view(), name=cls.slug)
 
-    @property
-    def prefix(self):
-        if hasattr(self.module, 'PREFIX'):
-            prefix = self.module.PREFIX
+    def redirect(self, url):
+        if self.request.htmx:
+            return HttpResponseClientRedirect(url)
         else:
-            app, views, crud = self.__class__.__module__.split('.')
-            prefix = f'{app}:{crud}:'
-        return prefix
-
-    def reverse(self, viewname, args=None):
-        return reverse(self.prefix + viewname, args=args)
+            return redirect(url)
 
     @ContextProperty
     def url(self):
-        try:
-            return self.reverse(self.slug)
-        except NoReverseMatch:
-            return '/'
+        return UrlView(self)
 
+    def bar_url(self):
+        return self.request.headers.get('HX-Current-URL', self.request.META['PATH_INFO'])
+
+    @classmethod
     @property
-    def templates_dir(self):
-        if hasattr(self.module, 'TEMPLATES_DIR'):
-            return self.module.TEMPLATES_DIR
+    def templates_dir(cls):
+        if hasattr(cls.module, 'TEMPLATES_DIR'):
+            return cls.module.TEMPLATES_DIR
         else:
-            app, views, crud = self.__class__.__module__.split('.')
+            app, views, crud = cls.__module__.split('.')
             return f'{app}/{crud}/'
 
+    @classmethod
     @property
-    def template_file(self):
-        return self.slug + '.html'
+    def template_file(cls):
+        return cls.slug + '.html'
 
+    @classmethod
     @property
-    def template_name(self):
-        return self.templates_dir + self.template_file
+    def template_name(cls):
+        return cls.templates_dir + cls.template_file
+
+    @classmethod
+    @property
+    def template_origin(cls):
+        for super_cls in cls.__mro__:
+            if OriginTemplateMixin in super_cls.__bases__:
+                return super_cls.template_name
+        raise ValueError('You must define an `OriginTemplateMixin`.')
 
     def render(self, context):
         template = engines['django'].get_template(self.template_name)
@@ -191,12 +219,12 @@ class PublicTemplateView(TemplateView):
         messages.error(self.request, message)
 
 
+class PublicTemplateView(BaseTemplateView):
+    pass
+
+
 class PrivateTemplateView(LoginRequiredMixin, PublicTemplateView):
 
     @ContextProperty
     def user(self):
         return self.request.user
-
-
-class PrivateRedirectView(LoginRequiredMixin, RedirectView):
-    pass
