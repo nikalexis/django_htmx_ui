@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "django_htmx_ui"
-version = "0.1.1"
+version = "0.1.2"
 authors = [
   { name="Nikalexis Nikolaos", email="nikalexis@gmail.com" },
 ]
@@ -15,6 +15,11 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+]
+dependencies = [
+    'Django >= 4.1.0',
+    'django_htmx >= 1.13.0',
+    'humanize >= 4.6.0',
 ]
 
 [project.urls]
