@@ -138,6 +138,11 @@ class BaseTemplateView(TemplateView):
 
     @classmethod
     @property
+    def slug_global(cls):
+        return f'{cls.slug_module}_{cls.slug}'
+
+    @classmethod
+    @property
     def path_route(cls):
         return cls.slug + '/'
 

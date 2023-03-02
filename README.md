@@ -330,6 +330,12 @@ When the view is used by a htmx request, you can send a htmx client event using 
 function. All `args` and `kwargs` are passed through to the
 `django_htmx.http.trigger_client_event` function and finally to the browser event object.
 
+`slug_global` class property
+
+This class property defines a global slug to use as a unique identifier for the `TemplateView`
+in you entire project.
+By default, it's a combination of `slug_module` + `slug` described below.
+
 `slug_module` class property
 
 This class property defines the slug name of the module that your view belongs to.
