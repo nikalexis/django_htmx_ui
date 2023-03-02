@@ -72,6 +72,14 @@ class Url:
     def __eq__(self, other):
         return str(self) == str(other)
 
+    @property
+    def resolver_match(self):
+        return resolve(self.path)
+
+    @property
+    def view(self):
+        return self.resolver_match.func.view_class
+
     @classmethod
     def create(cls, view_ref, *args, **kwargs):
         if type(view_ref) is str and view_ref.find('.') == -1:
@@ -119,6 +127,14 @@ class UrlView:
     @property
     def query(self):
         return self._url.query
+
+    @property
+    def resolver_match(self):
+        return self._url.resolver_match
+
+    @property
+    def view(self):
+        return self._url.view
 
     def __str__(self):
         return str(self._url)

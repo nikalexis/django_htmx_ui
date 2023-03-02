@@ -736,6 +736,15 @@ The string of the url's path.
 
 See below for the attributes provided.
 
+`resolver_match` property
+
+Returns the django's `ResolverMatch` object for the path.
+
+`view` property
+
+Returns the `TemplateView` class, provided by the `resolver_match` above.
+Usually, it will be the view that resolves to the `Url` object.
+
 `Url.Query` class
 
 This class represents an `Query` model you can use inside your views controller class or
