@@ -538,7 +538,7 @@ You can alter these behaviours by overwriting `on_post`, `on_post_success_messag
 The following Mixins are available to automate some common scenarios.
 Feel free to extend them more or overwriting the attributes.
 
-#### *django_htmx_ui.views.crud.*__FormMixin__
+#### *django_htmx_ui.views.mixins.*__FormMixin__
 
 Add this Mixin in your `TemplateView`, if the view contains a form.
 You can define a `Form` class inside the `TemplateView` class, which is recommended to
@@ -587,7 +587,7 @@ the attributes of the instance of the form.
 This attribute defines the django form's instance parameter, if using a `forms.ModelForm`.
 By default, gets its value from the instance property, if it is available.
 
-#### *django_htmx_ui.views.crud.*__InstanceMixin__ (FormMixin)
+#### *django_htmx_ui.views.mixins.*__InstanceMixin__ (FormMixin)
 
 Add this Mixin in your `TemplateView`, if the view contains a model form.
 See `FormMixin` attributes, as this Mixin is a subclass.
@@ -620,7 +620,7 @@ Sets a "'Instance' saved" message, when the form is successfully saved.
 
 Sets a "'Instance' not saved" message, when the form is not valid.
 
-#### *django_htmx_ui.views.crud.*__PartialMixin__
+#### *django_htmx_ui.views.mixins.*__PartialMixin__
 
 Add this Mixin in your `TemplateView` for the view to be only accessible via a htmx
 request.
@@ -629,12 +629,12 @@ a redirection will happen to the `/` route path.
 You can overwrite the default redirection route path by defining the `redirect_partial`
 attribute of the view.
 
-#### *django_htmx_ui.views.crud.*__ResponseNoContentMixin__
+#### *django_htmx_ui.views.mixins.*__ResponseNoContentMixin__
 
 Add this Mixin in your `TemplateView` to return `HTTP 204 No Content` as a response.
 No template rendering will happen.
 
-#### *django_htmx_ui.views.crud.*__TabsMixin__
+#### *django_htmx_ui.views.mixins.*__TabsMixin__
 
 It is common sometimes to use Tabs (subpages) in your project.
 Add this Mixin in your `TemplateView` to implement tabs' functionality.
@@ -686,6 +686,25 @@ By default, it used the `slug_tab` attribute.
 The `path_route` to push or replace on the location_bar.
 This will only be pushed or replaced when the active link has a slug.
 By default, it binds to `super().path_route + f'(?:(?P<{cls.slug_tab}>\w+)/)?'`
+
+#### *django_htmx_ui.views.mixins.*__ModalMixin__
+
+It is common sometimes to use Modals in your project.
+Add this Mixin in your `TemplateView` to implement a modal functionality.
+
+You can use the subclass `Modal` to define your `modal_*` atttribute:
+
+    @ContextCachedProperty
+    def modal_create(self):
+        return self.Modal(
+            url=self.url(Create).query(event=self.request.GET.get('event')),
+        )
+
+In this view a `{{ modal_create }}` variable will be available in your template.
+You can basically use the two attributes defined:
+
+* `url`: the htmx url to load inside your modal
+* `id`: a unique id for your modal, which is basically `modal_` + `self.slug_global`
 
 ### Utils
 

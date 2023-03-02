@@ -193,3 +193,19 @@ class TabsMixin:
 
         if self.tabs.remember:
             request.session[session_key] = int(self.tabs.selected)
+
+
+class ModalMixin:
+
+    class Modal:
+
+        def __init__(self, url, _id=None):
+            self.url = url
+            self.id = _id or f'modal_{self.view.slug_global}'
+
+    def __init__(self, *args, **kwargs):
+        class ModalView(ModalMixin.Modal):
+            view = self
+        self.Modal = ModalView
+        super().__init__(*args, **kwargs)
+
