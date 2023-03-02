@@ -73,22 +73,23 @@ class Url:
         return str(self) == str(other)
 
     @classmethod
-    def create(cls, view, *args, **kwargs):
-        if type(view) is str and view.find('.') == -1:
-            path = reverse(view, args=args, kwargs=kwargs)
-            # view_class = getattr(resolve(path).func, 'view_class', None)
+    def create(cls, view_ref, *args, **kwargs):
+        if type(view_ref) is str and view_ref.find('.') == -1:
+            path = reverse(view_ref, args=args, kwargs=kwargs)
         else:
-            if type(view) is str and view.find('.') >= 0:
-                module_name, class_name = view.rsplit(".", 1)
+            if type(view_ref) is str and view_ref.find('.') >= 0:
+                module_name, class_name = view_ref.rsplit(".", 1)
                 module = importlib.import_module(module_name)
                 klass = getattr(module, class_name)
-            elif type(view) is type:
-                klass = view
+            elif type(view_ref) is type:
+                klass = view_ref
             else:
-                klass = view.__class__
+                klass = view_ref.__class__
             app, views, crud = klass.__module__.split('.')
-            path = reverse(f'{app}:{crud}:{klass.slug}', args=args, kwargs=kwargs)
-            # view_class = resolve(path).func.view_class
+            path = reverse(
+                f'{app}:{crud}:{klass.slug}',
+                **dict(args=args) if args else dict(kwargs=kwargs)
+            )
 
         url = cls(path, [])
         return url
@@ -96,8 +97,8 @@ class Url:
 
 class UrlView:
 
-    def __init__(self, view, *args, **kwargs):
-        self.view = view
+    def __init__(self, view_ref, *args, **kwargs):
+        self.view_ref = view_ref
         self.args = args
         self.kwargs = kwargs
 
@@ -109,7 +110,7 @@ class UrlView:
 
     @functools.cached_property
     def _url(self):
-        return Url.create(self.view, *self.args, **self.kwargs)
+        return Url.create(self.view_ref, *self.args, **self.kwargs)
 
     @property
     def path(self):
@@ -122,11 +123,11 @@ class UrlView:
     def __str__(self):
         return str(self._url)
 
-    def __call__(self, view=None, *args, **kwargs):
-        if view is None:
-            return UrlView(self.view, *(args or self.args), **{**self.kwargs, **kwargs})
+    def __call__(self, view_ref=None, *args, **kwargs):
+        if view_ref is None:
+            return UrlView(self.view_ref, *(args or self.args), **{**self.kwargs, **kwargs})
         else:
-            return UrlView(view, *args, **kwargs)
+            return UrlView(view_ref, *args, **kwargs)
 
 
 class Location(Url):
