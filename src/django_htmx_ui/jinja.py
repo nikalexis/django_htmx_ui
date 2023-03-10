@@ -1,3 +1,7 @@
+from functools import cached_property
+
+import django.forms.renderers
+from django.conf import settings
 from django.templatetags.static import static
 from django.urls import reverse
 from django.utils import timezone
@@ -20,3 +24,19 @@ def environment(**options):
         'django_htmx_script': django_htmx_script,
     })
     return env
+
+
+class Jinja2DivFormRenderer(django.forms.renderers.Jinja2DivFormRenderer):
+
+    @cached_property
+    def engine(self):
+        for b in settings.TEMPLATES:
+            if b['BACKEND'] == 'django.template.backends.jinja2.Jinja2':
+                return self.backend(
+                    {
+                        'NAME': 'Jinja2DivFormRenderer',
+                        'DIRS': b['DIRS'],
+                        'APP_DIRS': b['APP_DIRS'],
+                        'OPTIONS': b['OPTIONS'],
+                    }
+                )
