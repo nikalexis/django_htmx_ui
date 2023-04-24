@@ -186,8 +186,8 @@ These sub-pages will have their own templates, but will be served by a htmx lazy
 #### Creating a partial sub-page
 
 If you now want to create a Widget inside your user's dashboard page, you can define
-its view as `Widget(PartialMixin, DefaultPanelOrigin)`. Please, notice the usage of the
-`PartialMixin`. When you add this Mixin, it means that this view can only be requested
+its view as `Widget(PartialTemplateMixin, DefaultPanelOrigin)`. Please, notice the usage of the
+`PartialTemplateMixin`. When you add this Mixin, it means that this view can only be requested
 via a htmx request, therefore it can't be opened directly from the browser's address
 bar.
 
@@ -538,6 +538,24 @@ You can alter these behaviours by overwriting `on_post`, `on_post_success_messag
 The following Mixins are available to automate some common scenarios.
 Feel free to extend them more or overwriting the attributes.
 
+#### *django_htmx_ui.views.mixins.*__OriginTemplateMixin__
+
+Add this Mixin in your `TemplateView` for the view to be accessible directly from
+a browser HTTP request and via a htmx request.
+You can also set the `push_url` attribute to `False`. In that case, the URL will be
+replaces in the browser's bar but no history will be creared (`HX-Replace` header).
+You can also set the `push_url` attribute to `None`. In that case, the URL will not
+be replaced in the browser's bar.
+
+#### *django_htmx_ui.views.mixins.*__PartialTemplateMixin__
+
+Add this Mixin in your `TemplateView` for the view to be only accessible via a htmx
+request.
+By default, if the url of view is called directly from the browser (outside htmx call),
+a redirection will happen to the `/` route path.
+You can overwrite the default redirection route path by defining the `redirect_partial`
+attribute of the view.
+
 #### *django_htmx_ui.views.mixins.*__FormMixin__
 
 Add this Mixin in your `TemplateView`, if the view contains a form.
@@ -619,15 +637,6 @@ Sets a "'Instance' saved" message, when the form is successfully saved.
 `on_post_success_message` method
 
 Sets a "'Instance' not saved" message, when the form is not valid.
-
-#### *django_htmx_ui.views.mixins.*__PartialMixin__
-
-Add this Mixin in your `TemplateView` for the view to be only accessible via a htmx
-request.
-By default, if the url of view is called directly from the browser (outside htmx call),
-a redirection will happen to the `/` route path.
-You can overwrite the default redirection route path by defining the `redirect_partial`
-attribute of the view.
 
 #### *django_htmx_ui.views.mixins.*__ResponseNoContentMixin__
 
