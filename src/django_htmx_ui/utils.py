@@ -53,6 +53,13 @@ class Url:
                 self.remove(name)
                 self.query_list.append((name, value))
             return self.url
+        
+        def get(self, key, single=False, single_index=-1):
+            values = [value for name, value in self.query_list if name == key]
+            if len(values) > 1:
+                return values if not single else values[single_index]
+            elif len(values) == 1:
+                return values[0]
 
     def __init__(self, path, query_list):
         self.path = str(path)
@@ -152,7 +159,7 @@ class Location(Url):
         self.push = push
         super().__init__(path, query_list)
 
-    def __call__(self, path=None, query_list=None, push=False):
+    def __call__(self, path=None, query_list=None, push=None):
         if push is not None:
             self.push = push
         return super().__call__(path, query_list)

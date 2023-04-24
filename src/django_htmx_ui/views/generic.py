@@ -23,7 +23,7 @@ class BaseTemplateView(TemplateView):
         self.triggers = []
         self.request = request
         self.location_bar = Location.create_from_url(self.bar_url())
-        self.location_req = Location.create_from_url(request.META['PATH_INFO'])
+        self.location_req = Location.create_from_url(request.get_full_path())
         self.add_context('request', request)
         return super().setup(request, *args, **kwargs)
 
@@ -162,7 +162,7 @@ class BaseTemplateView(TemplateView):
         return UrlView(self)
 
     def bar_url(self):
-        return self.request.headers.get('HX-Current-URL', self.request.META['PATH_INFO'])
+        return self.request.headers.get('HX-Current-URL', self.request.get_full_path())
 
     @classmethod
     @property

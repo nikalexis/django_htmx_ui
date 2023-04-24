@@ -1,15 +1,19 @@
 from django.core.exceptions import ViewDoesNotExist
 from django.shortcuts import redirect
+from django.utils.text import slugify
 
 from django_htmx_ui.utils import ContextProperty, ContextCachedProperty, UrlView, to_snake_case
 
 
 class OriginTemplateMixin:
+    push_url = True
 
     def get(self, request, *args, **kwargs):
         if request.htmx and OriginTemplateMixin in self.__class__.__bases__:
             raise ViewDoesNotExist("View '%s' is an 'OriginTemplateMixin'." % self.__class__.__name__)
         else:
+            if self.push_url is not None and self.location_bar.path != self.location_req.path:
+                self.location_bar(path=self.location_req.path, query_list=self.location_req.query.query_list, push=self.push_url)
             return super().get(request, *args, **kwargs)
 
 
@@ -128,15 +132,19 @@ class TabsMixin:
 
             @property
             def slug(self):
-                return self._slug or self.index
+                return self._slug or str(self.index)
 
-        def __init__(self, *links, selected=0, remember=False):
+        def __init__(self, *links, selected=0, remember=False, titles_slugify=True):
             self.selected = selected
             self.remember = remember
             self.links = links
 
             for i, l in enumerate(self.links):
                 l.index = i
+                if titles_slugify and l._slug is None:
+                    l._slug = slugify(l.title) or None
+                    if l._slug in [ls.slug for ls in self.links if ls.index != l.index]:
+                        l._slug = None
 
         @property
         def active(self):
@@ -155,11 +163,24 @@ class TabsMixin:
     @classmethod
     @property
     def slug_tab(cls):
-        return f'{cls.slug_module}_tab'
+        return f'{cls.slug_global}_tab'
 
     @property
     def tab_query_var(self):
         return self.slug_tab
+    
+    @property
+    def tab_session_key(self):
+        return f'tabs-remember-{self.slug_tab}'
+    
+    @property
+    def tab_selected_candidates(self):
+        return [
+            self.request.resolver_match.kwargs.get(self.slug_tab),
+            self.location_req.query.get(self.tab_query_var, True),
+            self.location_bar.query.get(self.tab_query_var, True),
+            self.request.session.get(self.tab_session_key),
+        ]
 
     @classmethod
     @property
@@ -169,30 +190,30 @@ class TabsMixin:
     def on_get(self, request, *args, **kwargs):
         super().on_get(request, *args, **kwargs)
 
-        session_key = f'tabs-remember-{self.slug_tab}'
-        if self.tabs.remember and session_key in request.session:
-            self.tabs.selected = int(request.session[session_key])
+        if self.request.session.get(self.tab_session_key) not in [None] + [l.slug for l in self.tabs.links]:
+            del self.request.session[self.tab_session_key]
 
-        if self.tab_query_var in request.GET:
-            self.tabs.selected = int(request.GET[self.tab_query_var])
+        for c in self.tab_selected_candidates:
+            if c is not None:
+                for link in self.tabs.links:
+                    if c in (link._slug, str(link.index)):
+                        self.tabs.selected = link.index
+                        break
+                else:
+                    raise ValueError(f"Tab slug '{c}' not found.")
+                break
 
-        slug_tab_value = self.request.resolver_match.kwargs.get(self.slug_tab)
-        if slug_tab_value:
-            for link in self.tabs.links:
-                if link.slug == slug_tab_value:
-                    self.tabs.selected = int(link.index)
-                    break
-            else:
-                raise ValueError(f"Tab slug '{slug_tab_value}' not found.")
-
-        if self.tabs.active.slug:
+        if self.location_bar.resolver_match.view_name == self.url.resolver_match.view_name:
             new_path = self.url(**{self.slug_tab: self.tabs.active.slug})
-            slug_location_bar = self.location_bar.resolver_match.kwargs.get(self.slug_tab)
-            push = slug_location_bar not in (None, slug_tab_value)
-            self.location_bar(path=new_path, push=push)
+            self.location_bar(path=new_path).query.remove(self.tab_query_var)
+        else:
+            current_slug = self.location_bar.query.get(self.tab_query_var)
+            if current_slug != self.tabs.active.slug:
+                push = current_slug is not None
+                self.location_bar(push=push).query(**{self.tab_query_var: self.tabs.active.slug})
 
         if self.tabs.remember:
-            request.session[session_key] = int(self.tabs.selected)
+            request.session[self.tab_session_key] = self.tabs.active.slug
 
 
 class ModalMixin:
