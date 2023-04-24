@@ -107,9 +107,12 @@ class BaseTemplateView(TemplateView):
         }
 
     def get_template_names(self):
-        if not self.request.htmx:
+        # Workaround: https://github.com/bigskysoftware/htmx/issues/497
+        if not self.request.htmx or self.request.htmx.history_restore_request:
+            print(self.url, self.request.htmx, self.request.htmx.history_restore_request)
             return self.template_origin
         else:
+            self.headers["Cache-Control"] = "no-store, max-age=0"
             return super().get_template_names()
 
     def add_context(self, key, value):
