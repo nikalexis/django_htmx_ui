@@ -120,7 +120,8 @@ class UrlView:
     def update(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
-        del self._url
+        if hasattr(self, '_url'):
+            del self._url
         return self
 
     @functools.cached_property
