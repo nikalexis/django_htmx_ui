@@ -142,7 +142,7 @@ class TabsMixin:
             for i, l in enumerate(self.links):
                 l.index = i
                 if titles_slugify and l._slug is None:
-                    l._slug = slugify(l.title) or None
+                    l._slug = slugify(l.title).replace('-', '_') or None
                     if l._slug in [ls.slug for ls in self.links if ls.index != l.index]:
                         l._slug = None
 
