@@ -9,6 +9,7 @@ from django.shortcuts import redirect
 from django.template import engines
 from django.urls import re_path
 from django.views.generic import TemplateView, RedirectView
+from django.utils.cache import patch_vary_headers
 from django_htmx.http import HttpResponseLocation, trigger_client_event, HttpResponseClientRedirect
 
 from django_htmx_ui.utils import ContextProperty, ContextCachedProperty, merge, to_snake_case, UrlView, Location
@@ -17,6 +18,7 @@ from django_htmx_ui.views.mixins import OriginTemplateMixin
 
 class BaseTemplateView(TemplateView):
     response = None
+    vary_headers = ("Hx-Request",)
 
     def setup(self, request, *args, **kwargs):
         self.headers = {}
@@ -71,6 +73,8 @@ class BaseTemplateView(TemplateView):
     def apply_headers(self, response):
         for key, value in self.headers.items():
             response[key] = value
+        if self.vary_headers:
+            patch_vary_headers(response, self.vary_headers)
         return response
 
     def apply_triggers(self, response):
@@ -107,12 +111,9 @@ class BaseTemplateView(TemplateView):
         }
 
     def get_template_names(self):
-        # Workaround: https://github.com/bigskysoftware/htmx/issues/497
         if not self.request.htmx or self.request.htmx.history_restore_request:
-            print(self.url, self.request.htmx, self.request.htmx.history_restore_request)
             return self.template_origin
         else:
-            self.headers["Cache-Control"] = "no-store, max-age=0"
             return super().get_template_names()
 
     def add_context(self, key, value):
