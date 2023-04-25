@@ -82,7 +82,7 @@ class InstanceMixin(FormMixin):
 
     @ContextProperty
     def url(self):
-        return UrlView(self, self.instance.pk)
+        return super().url(self, self.instance.pk)
 
     @ContextCachedProperty
     def instance(self):
@@ -176,9 +176,9 @@ class TabsMixin:
     @property
     def tab_selected_candidates(self):
         return [
-            self.request.resolver_match.kwargs.get(self.slug_tab),
             self.location_req.query.get(self.tab_query_var, True),
             self.location_bar.query.get(self.tab_query_var, True),
+            self.request.resolver_match.kwargs.get(self.slug_tab),
             self.request.session.get(self.tab_session_key),
         ]
 
@@ -186,6 +186,15 @@ class TabsMixin:
     @property
     def path_route(cls):
         return super().path_route + f'(?:(?P<{cls.slug_tab}>\w+)/)?'
+
+    @ContextProperty
+    def url(self):
+        url = super().url
+        slug = self.request.resolver_match.kwargs.get(self.slug_tab)
+        if slug:
+            return url(self, *(url.args + (slug,)))
+        else:
+            return super().url
 
     def on_get(self, request, *args, **kwargs):
         super().on_get(request, *args, **kwargs)
@@ -204,7 +213,7 @@ class TabsMixin:
                 break
 
         if self.location_bar.resolver_match.view_name == self.url.resolver_match.view_name:
-            new_path = self.url(**{self.slug_tab: self.tabs.active.slug})
+            new_path = self.url().update(**{**self.request.resolver_match.kwargs, **{self.slug_tab: self.tabs.active.slug}})
             self.location_bar(path=new_path).query.remove(self.tab_query_var)
         else:
             current_slug = self.location_bar.query.get(self.tab_query_var)
