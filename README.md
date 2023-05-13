@@ -78,13 +78,19 @@ It is basically a django app that provides:
           
             return env
 
-    and then replace the `'environment'` variable inside the `'OPTIONS'` key:
+    ...and then replace the `'environment'` variable inside the `'OPTIONS'` key:
 
         # ...
         'OPTIONS': {
             'environment': 'your_project.jinja.environment',
         },
         # ...
+    
+    Finally, to use the jinja FORM_RENDERER, add / replace in your `settings.py`:
+
+        from django_htmx_ui.jinja import get_form_renderer
+        # ...
+        FORM_RENDERER = get_form_renderer()
 
 ## Views
 
