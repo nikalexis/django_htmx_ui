@@ -40,3 +40,20 @@ class Jinja2DivFormRenderer(django.forms.renderers.Jinja2DivFormRenderer):
                         'OPTIONS': b['OPTIONS'],
                     }
                 )
+
+def fix_django_admin_templates():
+    from django.contrib import admin
+    from django.forms.renderers import DjangoTemplates
+
+    class ModelAdmin(admin.ModelAdmin):
+        def get_form(self, request, obj=None, **kwargs):
+            form = super().get_form(request, obj, **kwargs)
+            form.default_renderer = DjangoTemplates
+            return form
+
+    setattr(admin, 'ModelAdmin', ModelAdmin)
+
+def get_form_renderer(fix_django_admin=True):
+    if fix_django_admin:
+        fix_django_admin_templates()
+    return 'django_htmx_ui.jinja.Jinja2DivFormRenderer'
