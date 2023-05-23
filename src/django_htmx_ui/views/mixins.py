@@ -47,9 +47,9 @@ class FormMixin:
                     return Form(initial=self.form_initial)
             if self.request.method == 'POST':
                 if self.form_instance:
-                    return Form(self.request.POST, instance=self.form_instance)
+                    return Form(self.request.POST, self.request.FILES, instance=self.form_instance)
                 else:
-                    return Form(self.request.POST)
+                    return Form(self.request.POST, self.request.FILES)
 
     def on_post(self, request, *args, **kwargs):
         if self.form.is_valid():
