@@ -41,17 +41,18 @@ class UrlParameter(ViewBaseProperty):
 
 class UrlModelMixin:
     
-    def __init__(self, model, name=None, required=True, context=True, origin=False, filter=True) -> None:
+    def __init__(self, model, name=None, required=True, context=True, origin=False, filter=True, field='pk') -> None:
         super().__init__(name, required, context, origin)
         self.model = model
         self.filter = filter
+        self.field = field
 
     def _get(self, instance, owner):
-        pk = super()._get(instance, owner)
-        obj = self.model.objects.get_or_none(pk=pk)
+        value = super()._get(instance, owner)
+        obj = self.model.objects.get_or_none(**{ self.field: value})
         
         if obj is None:
-            raise ValueError(f"'{self.model.__name__}' instance not exists with pk='{pk}'")
+            raise ValueError(f"'{self.model.__name__}' instance not exists with {self.field}='{value}'")
         
         return obj
 
