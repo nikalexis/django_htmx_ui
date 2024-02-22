@@ -78,7 +78,8 @@ class InstanceMixin(FormMixin):
     @classmethod
     @property
     def path_route(cls):
-        return '(?P<pk>\w+)/' + super().path_route
+        name = cls.module.MODEL.__name__.lower()
+        return f'(?P<{name}>\w+)/' + super().path_route
 
     @ContextProperty
     def url(self):
@@ -86,7 +87,8 @@ class InstanceMixin(FormMixin):
 
     @ContextCachedProperty
     def instance(self):
-        return self.module.MODEL.objects.get(pk=self.request.resolver_match.kwargs['pk'])
+        name = self.module.MODEL.__name__.lower()
+        return self.module.MODEL.objects.get(pk=self.request.resolver_match.kwargs[name])
 
     @property
     def instance_slug(self):
