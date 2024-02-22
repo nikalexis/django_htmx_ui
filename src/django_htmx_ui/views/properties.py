@@ -1,24 +1,35 @@
 
-class BaseProperty:
+class ViewBaseProperty:
+
+    def __init__(self, name=None, required=True, context=True) -> None:
+        self.name = name
+        self.required = required
+        self.context = context
 
     def __set_name__(self, owner, name):
         if not self.name:
             self.name = name
 
     def __get__(self, instance, owner=None):
-        return self if instance is None else self._get(instance, owner)
+        if instance is None:
+            return self
+        else:
+            value = self._get(instance, owner)
+            
+            if self.context:
+                instance.add_context(self.name, value)
+            
+            return value
     
     def _get(self, instance, owner):
         raise NotImplementedError()
 
 
-class UrlParameter(BaseProperty):
+class UrlParameter(ViewBaseProperty):
 
-    def __init__(self, name=None, required=True, origin=False, context=True) -> None:
-        self.name = name
-        self.required = required
+    def __init__(self, name=None, required=True, context=True, origin=False) -> None:
+        super().__init__(name, required, context)
         self.origin = origin
-        self.context = context
 
     @property
     def origin_or_partial(self):
@@ -27,19 +38,11 @@ class UrlParameter(BaseProperty):
     def location(self, instance):
         return instance.location_bar if self.origin else instance.location_req
 
-    def _get(self, instance, owner):
-        value = self._get(instance, owner)
-        
-        if self.context:
-            instance.add_context(self.name, value)
-        
-        return value
-
 
 class UrlModelMixin:
     
-    def __init__(self, model, name=None, required=True, origin=False, filter=True) -> None:
-        super().__init__(name, required, origin)
+    def __init__(self, model, name=None, required=True, context=True, origin=False, filter=True) -> None:
+        super().__init__(name, required, context, origin)
         self.model = model
         self.filter = filter
 
