@@ -125,10 +125,11 @@ class TabsMixin:
         class Link:
             index = None
 
-            def __init__(self, title, url, slug=None):
+            def __init__(self, title, url, slug=None, icon=None):
                 self.title = title
                 self.url = url
                 self._slug = slug
+                self.icon = icon
 
             @property
             def slug(self):
