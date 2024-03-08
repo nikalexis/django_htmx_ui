@@ -83,7 +83,9 @@ class InstanceMixin(FormMixin):
 
     @ContextProperty
     def url(self):
-        return super().url(self, self.instance.pk)
+        url = super().url
+        name = self.module.MODEL.__name__.lower()
+        return url(self, **{**url.kwargs, name: self.instance.pk})
 
     @ContextCachedProperty
     def instance(self):
@@ -194,7 +196,7 @@ class TabsMixin:
         url = super().url
         slug = self.request.resolver_match.kwargs.get(self.slug_tab)
         if slug:
-            return url(self, *(url.args + (slug,)))
+            return url(self, **{**url.kwargs, self.slug_tab: slug})
         else:
             return super().url
 
