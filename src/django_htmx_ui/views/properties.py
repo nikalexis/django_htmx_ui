@@ -1,12 +1,12 @@
 
-class ViewBaseProperty:
+class BaseProperty:
 
-    def __init__(self, name=None, required=True, context=True) -> None:
+    def __init__(self, name=None, add_in_context=True) -> None:
         self.name = name
-        self.required = required
-        self.context = context
+        self.add_in_context = add_in_context
 
     def __set_name__(self, owner, name):
+        self.descriptor_name = name
         if not self.name:
             self.name = name
 
@@ -14,21 +14,23 @@ class ViewBaseProperty:
         if instance is None:
             return self
         else:
-            value = self._get(instance, owner)
-            
-            if self.context:
-                instance.add_context(self.name, value)
-            
-            return value
+            return self._get(instance, owner)
     
     def _get(self, instance, owner):
-        raise NotImplementedError()
+        return self
 
 
-class UrlParameter(ViewBaseProperty):
+class UrlBaseProperty(BaseProperty):
 
-    def __init__(self, name=None, required=True, context=True, origin=False) -> None:
-        super().__init__(name, required, context)
+    def __init__(self, name=None, required=True, add_in_context=True) -> None:
+        super().__init__(name, add_in_context)
+        self.required = required
+
+
+class UrlParameter(UrlBaseProperty):
+
+    def __init__(self, name=None, required=True, add_in_context=True, origin=False) -> None:
+        super().__init__(name, required, add_in_context)
         self.origin = origin
 
     @property
@@ -41,8 +43,8 @@ class UrlParameter(ViewBaseProperty):
 
 class UrlModelMixin:
     
-    def __init__(self, model, name=None, required=True, context=True, origin=False, filter=True, field='pk') -> None:
-        super().__init__(name, required, context, origin)
+    def __init__(self, model, name=None, required=True, add_in_context=True, origin=False, filter=True, field='pk') -> None:
+        super().__init__(name, required, add_in_context, origin)
         self.model = model
         self.filter = filter
         self.field = field
@@ -87,4 +89,5 @@ class UrlQueryParameter(UrlParameter):
 
 class UrlQueryModel(UrlModelMixin, UrlQueryParameter):
     pass
+
 

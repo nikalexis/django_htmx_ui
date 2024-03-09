@@ -1,6 +1,6 @@
 from django_htmx_ui.utils import ContextProperty
 from django_htmx_ui.views.mixins import ResponseNoContentMixin, FormMixin, InstanceMixin
-from django_htmx_ui.views.properties import ViewBaseProperty
+from django_htmx_ui.views.properties import UrlBaseProperty
 
 
 class CrudMixin:
@@ -34,24 +34,21 @@ class CrudRetrieveMixin(CrudMixin):
             if key.startswith('filter_')
         }
 
-    def filters_properties(self):
+    def filters_url(self):
         filters = {}
 
-        for key in self.__class__.__dict__:
-            obj = getattr(self.__class__, key)
+        for descriptor_name, member in self.get_properties(include=UrlBaseProperty, filter=lambda m: hasattr(m, 'filter')):
+            if type(member.filter) is bool and member.filter:
+                filters[member.name] = getattr(self, descriptor_name)
             
-            if isinstance(obj, ViewBaseProperty) and hasattr(obj, 'filter'):
-                if type(obj.filter) is bool and obj.filter:
-                    filters[obj.name] = getattr(self, key)
-                
-                if type(obj.filter) is str:
-                    filters[obj.filter] = getattr(self, key)
+            if type(member.filter) is str:
+                filters[member.filter] = getattr(self, descriptor_name)
         
         return filters
 
     @ContextProperty
     def instances(self):
-        return self.module.MODEL.objects.filter(**self.filter).filter(**self.filters_get()).filter(**self.filters_properties())
+        return self.module.MODEL.objects.filter(**self.filter).filter(**self.filters_get()).filter(**self.filters_url())
 
 
 class CrudListMixin(CrudRetrieveMixin):

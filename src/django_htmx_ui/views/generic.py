@@ -53,6 +53,14 @@ class BaseTemplateView(TemplateView):
     def on_post(self, request, *args, **kwargs):
         pass
 
+    def get_properties(self, include=(), exclude=(), filter=bool):
+        members = inspect.getmembers_static(
+            self.__class__,
+            lambda o:
+                isinstance(o, include) and not isinstance(o, exclude) and filter(o)
+        )
+        return members
+
     def render_to_response(self, context, **response_kwargs):
         response = super().render_to_response(context, **response_kwargs)
         return self.response_prepare(response)
