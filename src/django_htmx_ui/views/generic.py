@@ -193,7 +193,7 @@ class BaseTemplateView(TemplateView):
         for super_cls in cls.__mro__:
             if OriginTemplateMixin in super_cls.__bases__:
                 return super_cls.template_name
-        raise ValueError('You must define an `OriginTemplateMixin`.')
+        return cls.template_name
 
     def render(self, context):
         template = engines['django'].get_template(self.template_name)
