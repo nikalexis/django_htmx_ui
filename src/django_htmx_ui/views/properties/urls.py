@@ -1,23 +1,5 @@
 
-class BaseProperty:
-
-    def __init__(self, name=None, add_in_context=True) -> None:
-        self.name = name
-        self.add_in_context = add_in_context
-
-    def __set_name__(self, owner, name):
-        self.descriptor_name = name
-        if not self.name:
-            self.name = name
-
-    def __get__(self, instance, owner=None):
-        if instance is None:
-            return self
-        else:
-            return self._get(instance, owner)
-    
-    def _get(self, instance, owner):
-        return self
+from django_htmx_ui.views.properties.base import BaseProperty
 
 
 class UrlBaseProperty(BaseProperty):
@@ -29,16 +11,21 @@ class UrlBaseProperty(BaseProperty):
 
 class UrlParameter(UrlBaseProperty):
 
-    def __init__(self, name=None, required=True, add_in_context=True, origin=False) -> None:
+    def __init__(self, name=None, required=True, add_in_context=True, origin=False, fallback=True) -> None:
         super().__init__(name, required, add_in_context)
         self.origin = origin
+        self.fallback = fallback
 
     @property
     def origin_or_partial(self):
-        return 'origin' if self.origin else 'partial'
+        return ('origin' if self.origin else 'partial') + (('/partial' if self.origin else '/origin') if self.fallback else '')
 
-    def location(self, instance):
-        return instance.location_bar if self.origin else instance.location_req
+    def locations(self, instance):
+        return [
+            instance.location_bar if self.origin else instance.location_req
+        ] + ([
+            instance.location_req if self.origin else instance.location_bar
+        ] if self.fallback else [])
 
 
 class UrlModelMixin:
@@ -53,7 +40,7 @@ class UrlModelMixin:
         value = super()._get(instance, owner)
         obj = self.model.objects.get_or_none(**{ self.field: value})
         
-        if obj is None:
+        if self.required and obj is None:
             raise ValueError(f"'{self.model.__name__}' instance not exists with {self.field}='{value}'")
         
         return obj
@@ -62,8 +49,10 @@ class UrlModelMixin:
 class UrlPathParameter(UrlParameter):
 
     def _get(self, instance, owner):
-        location = self.location(instance)
-        value = location.resolver_match.kwargs.get(self.name)
+        for location in self.locations(instance):
+            value = location.resolver_match.kwargs.get(self.name)
+            if value is not None:
+                break
 
         if self.required and value is None:
             raise ValueError(f"'{self.name}' parameter not found in {self.origin_or_partial} request's path")
@@ -78,8 +67,10 @@ class UrlPathModel(UrlModelMixin, UrlPathParameter):
 class UrlQueryParameter(UrlParameter):
 
     def _get(self, instance, owner):
-        location = self.location(instance)
-        value = location.query.get(self.name)
+        for location in self.locations(instance):
+            value = location.query.get(self.name)
+            if value is not None:
+                break
 
         if self.required and value is None:
             raise ValueError(f"'{self.name}' parameter not found in {self.origin_or_partial} request's query")
@@ -89,5 +80,3 @@ class UrlQueryParameter(UrlParameter):
 
 class UrlQueryModel(UrlModelMixin, UrlQueryParameter):
     pass
-
-
