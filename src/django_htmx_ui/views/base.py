@@ -4,8 +4,8 @@ import os
 
 from django.views.generic.base import TemplateResponseMixin, ContextMixin, View
 from django.template.response import TemplateResponse
-from markupsafe import Markup
 from django_htmx_ui.utils import ContextCachedProperty, ContextProperty, to_snake_case
+from django_htmx_ui.views.properties.managers.context import ContextManager
 
 
 class ExtendedTemplateResponse(TemplateResponse):
@@ -54,13 +54,10 @@ class ExtendedTemplateResponseMixin(TemplateResponseMixin):
             return cls.module.TEMPLATES_DIR
         else:
             return cls.module_to_jinja_dir
-            app, views, crud = cls.__module__.split('.')
-            return f'{app}/{crud}/'
 
     @classmethod
     @property
     def module_to_jinja_dir(cls):
-        print(cls.__module__.split('.', 2))
         app, views, path = cls.__module__.split('.', 2)
         return f'{app}/{path.replace(".", "/")}/'
 
@@ -77,10 +74,6 @@ class ExtendedTemplateResponseMixin(TemplateResponseMixin):
     @ContextProperty
     def slug_panel(self):
         return self.slug_module
-
-    @ContextProperty
-    def html_id(self):
-        return self.slug_global
 
     @ContextProperty
     def title(self):
@@ -102,78 +95,18 @@ class ExtendedTemplateResponseMixin(TemplateResponseMixin):
         )
         return members
 
-    def context_from_properties(self, include=(), exclude=(), context=None):
-        from django_htmx_ui.views.properties.base import BaseProperty, ForeignProperty
-        from django_htmx_ui.views.properties.foreigners import ForeignContext
-
-        def filter(member):
-            if issubclass(type(member), BaseProperty):
-                return member.add_in_context
-
-            if issubclass(type(member), ForeignContext):
-                if not context or member.name not in context:
-                    
-                    if member.required:
-                        raise ValueError(f"Required context variable named '{member.name}' not found in the context of foreign descriptor '{self.foreigner_descriptor.descriptor_name}' in '{self.foreigner_descriptor.__class__}' for foreigner type '{self.foreigner.__class__}'")
-                    
-                    return False
-
-            return True
-
-        def context_key(descriptor_name, member):
-            if issubclass(type(member), BaseProperty):
-                return member.name
-            
-            return descriptor_name
-
-        def context_value(descriptor_name, member):
-            if issubclass(type(member), ForeignProperty):
-                member.setup_foreigner(
-                    instance=self,
-                    descriptor=member,
-                    context=context,
-                )
-
-            value = getattr(self, descriptor_name)
-            
-            if type(value) is self.response_class:
-                value = Markup(value)
-            
-            return value
-
-        return {
-            context_key(descriptor_name, member): context_value(descriptor_name, member)
-            for descriptor_name, member in self.get_properties(include, exclude, filter)
-        }
-
-    def get_context_data(self, **kwargs):
-        from django_htmx_ui.views.properties.base import BaseProperty, ForeignProperty
-
-        my_context = {
-            **super().get_context_data(**kwargs),
-            **self.context_from_properties(
-                include=(
-                    ContextProperty,
-                    ContextCachedProperty,
-                    BaseProperty,
-                ),
-                exclude=(
-                    ForeignProperty,
-                ),
-            ),
-            **getattr(self, '_context', {}),
-        }
-        foreign_context = self.context_from_properties(
-            include=(
-                ForeignProperty,
-            ),
-            context=my_context,
-        )
-        return {**my_context, **foreign_context}
-
 
 class ExtendedContextMixin(ContextMixin):
-    pass
+    
+    context = ContextManager()
+
+    def get_context_data(self, **kwargs):
+        context = {
+            **super().get_context_data(**kwargs),
+            **{key: self.context[key] for key in self.context.keys()},
+            **getattr(self, '_context', {}),
+        }
+        return context
 
 
 class ExtendedView(View):

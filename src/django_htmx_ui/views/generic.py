@@ -10,7 +10,6 @@ from django_htmx.http import HttpResponseLocation, trigger_client_event, HttpRes
 from django_htmx_ui.utils import ContextProperty, ContextCachedProperty, merge, UrlView, Location
 from django_htmx_ui.views.base import ExtendedTemplateView
 from django_htmx_ui.views.mixins import OriginTemplateMixin
-from django_htmx_ui.views.properties.foreigners import ForeignView
 
 
 class BaseTemplateView(ExtendedTemplateView):
@@ -52,16 +51,7 @@ class BaseTemplateView(ExtendedTemplateView):
 
     def render_to_response(self, context, **response_kwargs):
         response = super().render_to_response(context, **response_kwargs)
-        response.render()
-        response.content += self.render_foreign_views(context)
         return self.response_prepare(response)
-
-    def render_foreign_views(self, context):
-        all_views = b'\n\n'
-        for descriptor_name, member in self.get_properties(include=ForeignView):
-            all_views += getattr(self, descriptor_name).content + b'\n\n'
-        
-        return all_views
 
     def response_location(self, *args, **kwargs):
         self.response = HttpResponseLocation(*args, **kwargs)
