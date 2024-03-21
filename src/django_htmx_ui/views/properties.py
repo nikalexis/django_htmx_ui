@@ -36,7 +36,9 @@ class UrlParameter(ViewBaseProperty):
         return 'origin' if self.origin else 'partial'
 
     def location(self, instance):
-        return instance.location_bar if self.origin else instance.location_req
+        if self.origin:
+            return instance.location_req if instance.location_req else instance.location_bar
+        return instance.location_req
 
 
 class UrlModelMixin:
