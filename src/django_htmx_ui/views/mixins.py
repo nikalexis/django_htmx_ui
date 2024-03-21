@@ -78,15 +78,19 @@ class InstanceMixin(FormMixin):
     @classmethod
     @property
     def path_route(cls):
-        return '(?P<pk>\w+)/' + super().path_route
+        name = cls.module.MODEL.__name__.lower()
+        return f'(?P<{name}>\w+)/' + super().path_route
 
     @ContextProperty
     def url(self):
-        return super().url(self, self.instance.pk)
+        url = super().url
+        name = self.module.MODEL.__name__.lower()
+        return url(self, **{**url.kwargs, name: self.instance.pk})
 
     @ContextCachedProperty
     def instance(self):
-        return self.module.MODEL.objects.get(pk=self.request.resolver_match.kwargs['pk'])
+        name = self.module.MODEL.__name__.lower()
+        return self.module.MODEL.objects.get(pk=self.request.resolver_match.kwargs[name])
 
     @property
     def instance_slug(self):
@@ -193,7 +197,7 @@ class TabsMixin:
         url = super().url
         slug = self.request.resolver_match.kwargs.get(self.slug_tab)
         if slug:
-            return url(self, *(url.args + (slug,)))
+            return url(self, **{**url.kwargs, self.slug_tab: slug})
         else:
             return super().url
 

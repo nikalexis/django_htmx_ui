@@ -1,5 +1,6 @@
 from django_htmx_ui.utils import ContextProperty
 from django_htmx_ui.views.mixins import ResponseNoContentMixin, FormMixin, InstanceMixin
+from django_htmx_ui.views.properties import ViewBaseProperty
 
 
 class CrudMixin:
@@ -33,9 +34,24 @@ class CrudRetrieveMixin(CrudMixin):
             if key.startswith('filter_')
         }
 
+    def filters_properties(self):
+        filters = {}
+
+        for key in self.__class__.__dict__:
+            obj = getattr(self.__class__, key)
+            
+            if isinstance(obj, ViewBaseProperty) and hasattr(obj, 'filter'):
+                if type(obj.filter) is bool and obj.filter:
+                    filters[obj.name] = getattr(self, key)
+                
+                if type(obj.filter) is str:
+                    filters[obj.filter] = getattr(self, key)
+        
+        return filters
+
     @ContextProperty
     def instances(self):
-        return self.module.MODEL.objects.filter(**self.filter).filter(**self.filters_get())
+        return self.module.MODEL.objects.filter(**self.filter).filter(**self.filters_get()).filter(**self.filters_properties())
 
 
 class CrudListMixin(CrudRetrieveMixin):
