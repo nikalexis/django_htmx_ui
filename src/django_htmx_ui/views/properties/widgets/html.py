@@ -8,12 +8,6 @@ class HtmlWidget(BaseWidget):
     pass
 
 
-class HtmlContent(HtmlWidget):
-
-    def __init__(self, name=None, add_in_context=True) -> None:
-        super().__init__(name, add_in_context)
-
-
 class HtmlAttribute(HtmlWidget):
 
     def __init__(self, default=None, name=None, add_in_context=True) -> None:
@@ -47,6 +41,12 @@ class HtmlAttributeId(HtmlAttribute):
         return f'{descriptor.slug_global}'
 
 
+class HtmlContent(HtmlWidget):
+
+    def __init__(self, name=None, add_in_context=True) -> None:
+        super().__init__(name, add_in_context)
+
+
 class HtmlElement(HtmlContent):
 
     attributes = LocalProperties(HtmlAttribute, separator=' ')
@@ -60,6 +60,10 @@ class HtmlElement(HtmlContent):
             raise ValueError("The 'tag' parameter is required for wrapped elements.")
 
         super().__init__(name, add_in_context)
+
+    @property
+    def wrapper_class(self):
+        return HtmlWrapper if self.wrap is True else self.wrap
     
     @ContextProperty
     def tag(self):
@@ -69,7 +73,7 @@ class HtmlElement(HtmlContent):
         response = super()._get(instance, owner)
         
         if self.wrap:
-            wrapper = HtmlWrapper(tag=self.tag, attributes=self.attributes, contents=response)
+            wrapper = self.wrapper_class(tag=self.tag, attributes=self.attributes, contents=response)
             return wrapper.rendered_response()
         else:
             return response
