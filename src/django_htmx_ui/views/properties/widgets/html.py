@@ -1,5 +1,5 @@
 
-from django_htmx_ui.utils import ContextCachedProperty, ContextProperty
+from django_htmx_ui.utils import ContextCachedProperty, ContextProperty, NotDefined
 from django_htmx_ui.views.properties.widgets.base import BaseWidget
 from django_htmx_ui.views.properties.widgets.helpers import ContextVariable, LocalProperties
 
@@ -47,17 +47,20 @@ class HtmlContent(HtmlWidget):
         super().__init__(name, add_in_context)
 
 
+class HtmlTag(ContextVariable):
+    pass
+    
+
 class HtmlElement(HtmlContent):
 
+    tag = HtmlTag()
     attributes = LocalProperties(HtmlAttribute, separator=' ')
     contents = LocalProperties(HtmlContent, separator='\n')
 
     def __init__(self, tag=None, wrap=True, name=None, add_in_context=True) -> None:
-        self._tag = tag or getattr(self.__class__, 'TAG', 'div')
+        if tag is not None:
+            self.tag = tag
         self.wrap = wrap
-
-        if self.wrap and not self._tag:
-            raise ValueError("The 'tag' parameter is required for wrapped elements.")
 
         super().__init__(name, add_in_context)
 
@@ -65,14 +68,13 @@ class HtmlElement(HtmlContent):
     def wrapper_class(self):
         return HtmlWrapper if self.wrap is True else self.wrap
     
-    @ContextProperty
-    def tag(self):
-        return self._tag
-
     def _get(self, instance, owner):
         response = super()._get(instance, owner)
         
         if self.wrap:
+            if self.tag is NotDefined:
+                raise ValueError(f"The 'tag' parameter is required for wrapped element {self}.")
+
             wrapper = self.wrapper_class(tag=self.tag, attributes=self.attributes, contents=response)
             return wrapper.rendered_response()
         else:
@@ -81,10 +83,12 @@ class HtmlElement(HtmlContent):
 
 class HtmlWrapper(HtmlElement):
 
+    tag = HtmlTag(required=True)
     attributes = ContextVariable()
     contents = ContextVariable()
 
     def __init__(self, tag, attributes, contents) -> None:
+        self.tag = tag
         self.attributes = attributes
         self.contents = contents
         super().__init__(tag=tag, wrap=False, name=None, add_in_context=False)
