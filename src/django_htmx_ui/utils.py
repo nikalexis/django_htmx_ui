@@ -7,6 +7,10 @@ from urllib.parse import urlencode, urlparse, parse_qsl
 from django.urls import path, include, reverse, resolve
 from django.shortcuts import redirect
 from django_htmx.http import HttpResponseClientRedirect
+from jinja2 import Undefined
+
+
+NotDefined = Undefined()
 
 
 class ContextProperty(property):

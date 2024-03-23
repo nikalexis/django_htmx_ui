@@ -1,15 +1,22 @@
-from django_htmx_ui.utils import ContextCachedProperty, ContextProperty
+from django_htmx_ui.utils import ContextCachedProperty, ContextProperty, NotDefined
+from django_htmx_ui.views.properties.base import BaseProperty
 from django_htmx_ui.views.properties.widgets.base import BaseWidget
 
 
-class ContextVariable(BaseWidget):
+class ContextVariable(BaseProperty):
 
-    def __init__(self, default='', name=None, add_in_context=True) -> None:
+    def __init__(self, default=NotDefined, required=False, name=None, add_in_context=True) -> None:
         self.default = default
+        self.required = required
         super().__init__(name, add_in_context)
 
     def _get(self, instance, owner):
-        return instance.__dict__.get(self.descriptor_name, self.default)
+        value = instance.__dict__.get(self.descriptor_name, self.default)
+
+        if self.required and value is NotDefined:
+            raise ValueError(f"Required context variable '{self.name}' is not defined.")
+
+        return value
     
     def __set__(self, instance, value):
         instance.__dict__[self.descriptor_name] = value
