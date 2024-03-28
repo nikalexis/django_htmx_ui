@@ -1,11 +1,31 @@
-
+from django_htmx_ui.utils import ContextProperty
+from django_htmx_ui.views.properties.ancestors import ParentContext
 from django_htmx_ui.views.properties.widgets.html import HtmlAttribute, HtmlElementId
+
+
+def to_htmx_name(name, force_prepend='hx-'):
+    replaced_name = name.replace('_', '-')
+    prepend = force_prepend if force_prepend and not replaced_name.startswith(force_prepend) else ''
+    return f'{prepend}{replaced_name}'
 
 
 class HtmxAttribute(HtmlAttribute):
 
     def __set_name__(self, owner, name):
-        super().__set_name__(owner, name.replace('_', '-'))
+        super().__set_name__(owner, to_htmx_name(name))
+
+
+class HtmxMethod(HtmxAttribute):
+
+    method = ParentContext()
+    value = ParentContext('url')
+
+    def __init__(self, add_in_context=True) -> None:
+        super().__init__(add_in_context=add_in_context)
+
+    @ContextProperty
+    def attr(self):
+        return to_htmx_name(self.method.lower())
 
 
 class HtmxElementId(HtmlElementId):

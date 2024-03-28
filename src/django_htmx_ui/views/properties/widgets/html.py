@@ -1,4 +1,3 @@
-
 from django_htmx_ui.utils import ContextCachedProperty, ContextProperty, NotDefined
 from django_htmx_ui.views.properties.widgets.base import BaseWidget
 from django_htmx_ui.views.properties.widgets.helpers import ContextVariable, LocalProperties
@@ -10,35 +9,30 @@ class HtmlWidget(BaseWidget):
 
 class HtmlAttribute(HtmlWidget):
 
-    def __init__(self, default=None, name=None, add_in_context=True) -> None:
+    def __init__(self, default=NotDefined, name=None, add_in_context=True) -> None:
         self.default = default
         super().__init__(name, add_in_context)
-
-    def get_default(self, instance, owner):
-        if self.default is not None:
-            return self.default(self, instance, owner) if callable(self.default) else self.default
 
     @ContextProperty
     def attr(self):
         return self.name
 
-    def _get(self, instance, owner):
-        if not 'value' in self.context.keys():
-            self.context['value'] = self.get_default(instance, owner)
-        return super()._get(instance, owner)
+    @ContextVariable()
+    def value(self, widget):
+        widget.default = self.default
 
-    def __set__(self, instance, value):
-        self.context['value'] = value
+    def _set(self, instance, value):
+        self.value = value
 
 
 class HtmlAttributeId(HtmlAttribute):
 
-    def __init__(self, default=None, name=None, add_in_context=True) -> None:
-        super().__init__(default if default is not None else self.auto_id, name, add_in_context)
-
-    @staticmethod
-    def auto_id(descriptor, instance, owner):
-        return f'{descriptor.slug_global}'
+    @ContextVariable()
+    def value(self, widget):
+        if self.default is not NotDefined:
+            widget.default = self.default
+        else:
+            return f'{self.slug_global}'
 
 
 class HtmlContent(HtmlWidget):

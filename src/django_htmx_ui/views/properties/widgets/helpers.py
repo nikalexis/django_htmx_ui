@@ -5,21 +5,33 @@ from django_htmx_ui.views.properties.widgets.base import BaseWidget
 
 class ContextVariable(BaseProperty):
 
+    _getter = None
+
     def __init__(self, default=NotDefined, required=False, name=None, add_in_context=True) -> None:
         self.default = default
         self.required = required
         super().__init__(name, add_in_context)
 
+    def __call__(self, getter):
+        self._getter = getter
+        return self
+    
     def _get(self, instance, owner):
-        value = instance.__dict__.get(self.descriptor_name, self.default)
+        if self._getter:
+            getter_value = self._getter(instance, self)
+
+        value = instance.context.data.get(
+            self.name,
+            getter_value if self._getter and getter_value is not None else self.default
+        )
 
         if self.required and value is NotDefined:
             raise ValueError(f"Required context variable '{self.name}' is not defined.")
 
         return value
     
-    def __set__(self, instance, value):
-        instance.__dict__[self.descriptor_name] = value
+    def _set(self, instance, value):
+        instance.context.data[self.name] = value
 
 
 class LocalProperties(BaseWidget):
@@ -35,9 +47,9 @@ class LocalProperties(BaseWidget):
     def separator(self):
         return self._separator
 
-    def _get(self, instance, owner):
-        self.context['contents'] = [
-            getattr(instance, descriptor_name)
-            for descriptor_name, member in instance.get_properties(include=self.include, exclude=self.exclude, filter=self.filter)
+    @ContextCachedProperty
+    def contents(self):
+        return [
+            getattr(self.parent, descriptor_name)
+            for descriptor_name, member in self.parent.get_properties(include=self.include, exclude=self.exclude, filter=self.filter)
         ]
-        return super()._get(instance, owner)
