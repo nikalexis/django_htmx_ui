@@ -2,7 +2,7 @@ from django_htmx_ui.views.properties.contexts import ContextProperty
 from django_htmx_ui.defs import NotDefined
 from django_htmx_ui.views.properties.contexts import ContextVariable
 from django_htmx_ui.views.properties.widgets.base import BaseWidget
-from django_htmx_ui.views.properties.widgets.helpers import LocalProperties
+from django_htmx_ui.views.properties.widgets.helpers import Join
 
 
 class HtmlWidget(BaseWidget):
@@ -48,8 +48,8 @@ class HtmlTag(ContextVariable):
 class HtmlElement(HtmlContent):
 
     tag = HtmlTag()
-    attributes = LocalProperties(HtmlAttribute, separator=' ')
-    contents = LocalProperties(HtmlContent, separator='\n')
+    attributes = Join(HtmlAttribute, separator=' ')
+    contents = Join(HtmlContent, separator='\n')
 
     def __init__(self, tag=None, wrap=True, name=None, add_in_context=True) -> None:
         if tag is not None:

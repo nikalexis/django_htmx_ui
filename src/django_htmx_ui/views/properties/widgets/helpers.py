@@ -4,7 +4,7 @@ from django_htmx_ui.views.properties.base import BaseProperty
 from django_htmx_ui.views.properties.widgets.base import BaseWidget
 
 
-class LocalProperties(BaseWidget):
+class Join(BaseWidget):
 
     def __init__(self, *include_args, include=(), exclude=(), filter=bool, separator='', name=None, add_in_context=True) -> None:
         self.include = tuple(set(include_args) | set(include))
