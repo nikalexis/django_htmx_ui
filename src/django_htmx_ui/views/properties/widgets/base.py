@@ -26,11 +26,6 @@ class BaseWidget(ExtendedTemplateResponseMixin, ExtendedContextMixin, ForeignPro
         response.render()
         return Markup(response)
 
-    def __get__(self, instance, owner=None):
-        if instance is not None:
-            self.context.parent = getattr(instance, 'context', None)
-        return super().__get__(instance, owner)
-
     def _get(self, instance, owner):
         return self.rendered_response()
 

@@ -110,7 +110,10 @@ class ExtendedContextMixin(ContextMixin):
 
 
 class ExtendedView(View):
-    pass
+
+    def __init__(self, **kwargs):
+        self.view = self
+        super().__init__(**kwargs)
 
 
 class ExtendedTemplateView(ExtendedTemplateResponseMixin, ExtendedContextMixin, ExtendedView):

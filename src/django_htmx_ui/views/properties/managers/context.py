@@ -1,13 +1,10 @@
-
-
+import copy
 from django_htmx_ui.utils import ContextCachedProperty, ContextProperty
 from django_htmx_ui.views.properties.base import BaseProperty
 from collections.abc import Mapping, MutableMapping
 
 
 class Context:
-
-    parent = None
 
     def __init__(self, instance, owner, name, include=(), exclude=(), context=None) -> None:
         self.instance = instance
@@ -22,6 +19,10 @@ class Context:
         }
 
         self.data = context or {}
+
+    @property
+    def parent(self):
+        return self.instance.parent.context
 
     @staticmethod
     def filter(descriptor):
@@ -102,12 +103,25 @@ class ContextManager:
         if instance is None:
             return self
         else:
-            return instance.__dict__.setdefault(
-                self.descriptor_name,
-                self.CONTEXT_TYPE(
+            instance_dict_key = f'__context_manager__{self.descriptor_name}'
+            try:
+                context = instance.__dict__[instance_dict_key]
+            except KeyError:
+                context = instance.__dict__[instance_dict_key] = self.CONTEXT_TYPE(
                     instance,
                     owner,
                     self.name,
                     self.PROPERTY_TYPES,
-                ),
-            )
+                )
+
+            if context.instance is not instance:
+                context = instance.__dict__[instance_dict_key] = self.CONTEXT_TYPE(
+                    instance,
+                    owner,
+                    self.name,
+                    context._include,
+                    context._exclude,
+                    copy.copy(context.data),
+                )
+
+            return context
