@@ -1,7 +1,5 @@
 import copy
-from django_htmx_ui.utils import ContextCachedProperty, ContextProperty
 from django_htmx_ui.views.properties.base import BaseProperty
-from collections.abc import Mapping, MutableMapping
 
 
 class Context:
@@ -56,10 +54,13 @@ class Context:
         if key not in self.keys():
             raise KeyError(f"'{key}' not found in context properties.")
 
-        if key not in self.data:
-            self.data[key] = self.read_from_instance(self._descriptors[key])
-
-        return self.data[key]
+        try:
+            return self.data[key]
+        except KeyError:
+            value = self.read_from_instance(self._descriptors[key])
+            if getattr(self.instance.__class__, self._descriptors[key]).cache:
+                self.data[key] = value
+            return value
     
     def __setitem__(self, key, value):
         if key in self._descriptors:
@@ -88,7 +89,7 @@ class Context:
 
 class ContextManager:
 
-    PROPERTY_TYPES = (ContextProperty, ContextCachedProperty, BaseProperty)
+    PROPERTY_TYPES = (BaseProperty,)
     CONTEXT_TYPE = Context
 
     def __init__(self, name=None) -> None:
@@ -103,7 +104,7 @@ class ContextManager:
         if instance is None:
             return self
         else:
-            instance_dict_key = f'__context_manager__{self.descriptor_name}'
+            instance_dict_key = f'__context_manager-{id(self)}'
             try:
                 context = instance.__dict__[instance_dict_key]
             except KeyError:

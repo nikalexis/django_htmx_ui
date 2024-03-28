@@ -1,6 +1,8 @@
-from django_htmx_ui.utils import ContextCachedProperty, ContextProperty, NotDefined
+from django_htmx_ui.views.properties.contexts import ContextProperty
+from django_htmx_ui.defs import NotDefined
+from django_htmx_ui.views.properties.contexts import ContextVariable
 from django_htmx_ui.views.properties.widgets.base import BaseWidget
-from django_htmx_ui.views.properties.widgets.helpers import ContextVariable, LocalProperties
+from django_htmx_ui.views.properties.widgets.helpers import LocalProperties
 
 
 class HtmlWidget(BaseWidget):
@@ -9,17 +11,17 @@ class HtmlWidget(BaseWidget):
 
 class HtmlAttribute(HtmlWidget):
 
+    value = ContextVariable()
+
     def __init__(self, default=NotDefined, name=None, add_in_context=True) -> None:
         self.default = default
+        if self.default is not NotDefined:
+            self.value = self.default
         super().__init__(name, add_in_context)
 
     @ContextProperty
     def attr(self):
         return self.name
-
-    @ContextVariable()
-    def value(self, widget):
-        widget.default = self.default
 
     def _set(self, instance, value):
         self.value = value
@@ -27,12 +29,10 @@ class HtmlAttribute(HtmlWidget):
 
 class HtmlAttributeId(HtmlAttribute):
 
-    @ContextVariable()
-    def value(self, widget):
-        if self.default is not NotDefined:
-            widget.default = self.default
-        else:
-            return f'{self.slug_global}'
+    def __init__(self, default=NotDefined, name=None, add_in_context=True) -> None:
+        if default is not NotDefined:
+            default = f'{self.slug_global}'
+        super().__init__(default, name, add_in_context)
 
 
 class HtmlContent(HtmlWidget):

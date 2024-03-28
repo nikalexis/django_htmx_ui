@@ -6,9 +6,10 @@ class BaseProperty:
     view = None
     parent = None
 
-    def __init__(self, name=None, add_in_context=True) -> None:
+    def __init__(self, name=None, add_in_context=True, cache=True) -> None:
         self.name = name
         self.add_in_context = add_in_context
+        self.cache = cache
 
     def __set_name__(self, owner, name):
         self.owner = owner
@@ -20,7 +21,8 @@ class BaseProperty:
         view = getattr(instance, 'view', None)
         
         if view:
-            instance_dict_key = f'__property__{self.descriptor_name}'
+            # instance_dict_key = f'__property__{self.descriptor_name}'
+            instance_dict_key = f'__property-{id(self)}'
             try:
                 copied_self = instance.__dict__[instance_dict_key]
             except KeyError:

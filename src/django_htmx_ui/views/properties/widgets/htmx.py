@@ -1,5 +1,4 @@
-from django_htmx_ui.utils import ContextProperty
-from django_htmx_ui.views.properties.ancestors import ParentContext
+from django_htmx_ui.views.properties.contexts import ContextProperty, ContextParent
 from django_htmx_ui.views.properties.widgets.html import HtmlAttribute, HtmlElementId
 
 
@@ -17,8 +16,8 @@ class HtmxAttribute(HtmlAttribute):
 
 class HtmxMethod(HtmxAttribute):
 
-    method = ParentContext()
-    value = ParentContext('url')
+    method = ContextParent()
+    value = ContextParent('url')
 
     def __init__(self, add_in_context=True) -> None:
         super().__init__(add_in_context=add_in_context)

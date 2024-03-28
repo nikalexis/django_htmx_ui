@@ -1,5 +1,5 @@
 from typing import Any
-from django_htmx_ui.views.properties.widgets.helpers import ContextVariable
+from django_htmx_ui.views.properties.contexts import ContextVariable
 from django_htmx_ui.views.properties.widgets.html import HtmlElement, HtmlElementId
 from django_htmx_ui.views.properties.widgets.htmx import HtmxAttribute, HtmxMethod
 
