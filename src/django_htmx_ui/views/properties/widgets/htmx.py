@@ -1,4 +1,5 @@
 from django_htmx_ui.views.properties.contexts import ContextProperty, ContextVariable
+from django_htmx_ui.views.properties.misc import Alias
 from django_htmx_ui.views.properties.widgets.html import HtmlAttribute, HtmlElementId
 
 
@@ -18,6 +19,7 @@ class HtmxRequestMethod(HtmxAttribute):
 
     method = ContextVariable(required=True)
     url = ContextVariable(required=True)
+    value = Alias(url)
 
     def __init__(self, method=None, add_in_context=True) -> None:
         if method is not None:
@@ -27,10 +29,6 @@ class HtmxRequestMethod(HtmxAttribute):
     @ContextProperty
     def attr(self):
         return to_htmx_name(self.method.lower())
-
-    @ContextProperty
-    def value(self):
-        return self.url
 
 
 class HtmxGet(HtmxRequestMethod):
