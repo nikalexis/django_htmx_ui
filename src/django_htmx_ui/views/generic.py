@@ -87,7 +87,7 @@ class BaseTemplateView(ExtendedTemplateView):
         self.triggers.append((args, kwargs))
 
     def get_template_names(self):
-        if not self.request.htmx or self.request.htmx.history_restore_request:
+        if self.is_origin_request:
             return self.template_origin
         else:
             return super().get_template_names()
@@ -118,13 +118,22 @@ class BaseTemplateView(ExtendedTemplateView):
     def bar_url(self):
         return self.request.headers.get('HX-Current-URL', self.request.get_full_path())
 
+    @property
+    def is_origin_request(self):
+        return not self.request.htmx or self.request.htmx.history_restore_request
+
+    @classmethod
+    @property
+    def origin_class(cls):
+        for super_cls in cls.__mro__:
+            if OriginTemplateMixin in super_cls.__bases__:
+                return super_cls
+
     @classmethod
     @property
     def template_origin(cls):
-        for super_cls in cls.__mro__:
-            if OriginTemplateMixin in super_cls.__bases__:
-                return super_cls.template_name
-        return cls.template_name
+        origin_class = cls.origin_class
+        return origin_class.template_name if origin_class else cls.template_name
 
     # def render(self, context):
     #     template = engines['django'].get_template(self.template_name)
