@@ -41,10 +41,14 @@ class BaseProperty:
         if instance is None:
             return self
         else:
-            return self.copied_self(instance)._get(instance, owner)
+            copied_self = self.copied_self(instance)
+            return copied_self._get(instance, owner)
     
     def _get(self, instance, owner):
-        raise AttributeError(f"Cannot get attribute, a _get function is not defined for '{self}'.")
+        if self.view:
+            return self.__view__()
+        else:
+            return self
 
     def __set__(self, instance, value):
         self.copied_self(instance)._set(instance, value)
@@ -57,6 +61,9 @@ class BaseProperty:
 
     def _del(self, instance):
         raise AttributeError(f"Cannot delete attribute, a _del function is not defined for '{self}'.")
+
+    def __view__(self):
+        return self
 
 
 class ForeignProperty(BaseProperty):

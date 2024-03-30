@@ -15,8 +15,8 @@ class ContextProperty(BaseContextProperty):
         self._getter = getter
         super(BaseContextProperty, self).__init__(name, add_in_context=True, cache=False)
 
-    def _get(self, instance, owner):
-        return self._getter(instance)
+    def __view__(self):
+        return self._getter(self.parent)
 
 
 class ContextCachedProperty(ContextProperty):
@@ -25,10 +25,10 @@ class ContextCachedProperty(ContextProperty):
         self._getter = getter
         super(BaseContextProperty, self).__init__(name, add_in_context=True, cache=True)
 
-    def _get(self, instance, owner):
-        return instance.context.data.setdefault(
+    def __view__(self):
+        return self.parent.context.data.setdefault(
             self.name,
-            self._getter(instance),
+            self._getter(self.parent),
         )
 
 
@@ -45,15 +45,15 @@ class ContextVariable(BaseContextProperty):
         self._getter = getter
         return self
     
-    def _get(self, instance, owner):
+    def __view__(self):
         try:
-            value = instance.context.data[self.name]
+            value = self.parent.context.data[self.name]
         except KeyError:
             if self._getter:
-                value = self._getter(instance, self)
+                value = self._getter(self.parent, self)
 
                 if self.cache:
-                    instance.context.data[self.name] = value
+                    self.parent.context.data[self.name] = value
 
             else:
                 value = self.default
@@ -80,9 +80,9 @@ class ContextAncestor(BaseContextProperty):
         if self.foreign_name is None:
             self.foreign_name = self.name
 
-    def _get(self, instance, owner):
+    def __view__(self):
         try:
-            ancestor = instance
+            ancestor = self.parent
             counter = 1
             while self.limit is None or counter <= self.limit:
                 ancestor = ancestor.parent

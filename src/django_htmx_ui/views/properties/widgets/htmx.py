@@ -1,4 +1,4 @@
-from django_htmx_ui.views.properties.contexts import ContextProperty, ContextParent
+from django_htmx_ui.views.properties.contexts import ContextProperty, ContextVariable
 from django_htmx_ui.views.properties.widgets.html import HtmlAttribute, HtmlElementId
 
 
@@ -14,17 +14,43 @@ class HtmxAttribute(HtmlAttribute):
         super().__set_name__(owner, to_htmx_name(name))
 
 
-class HtmxMethod(HtmxAttribute):
+class HtmxRequestMethod(HtmxAttribute):
 
-    method = ContextParent()
-    value = ContextParent('url')
+    method = ContextVariable(required=True)
+    url = ContextVariable(required=True)
 
-    def __init__(self, add_in_context=True) -> None:
+    def __init__(self, method=None, add_in_context=True) -> None:
+        if method is not None:
+            self.method = method
         super().__init__(add_in_context=add_in_context)
 
     @ContextProperty
     def attr(self):
         return to_htmx_name(self.method.lower())
+
+    @ContextProperty
+    def value(self):
+        return self.url
+
+
+class HtmxGet(HtmxRequestMethod):
+    method = ContextVariable('GET', required=True)
+
+
+class HtmxPost(HtmxRequestMethod):
+    method = ContextVariable('POST', required=True)
+
+
+class HtmxPatch(HtmxRequestMethod):
+    method = ContextVariable('PATCH', required=True)
+
+
+class HtmxPut(HtmxRequestMethod):
+    method = ContextVariable('PUT', required=True)
+
+
+class HtmxDelete(HtmxRequestMethod):
+    method = ContextVariable('DELETE', required=True)
 
 
 class HtmxElementId(HtmlElementId):
@@ -37,5 +63,5 @@ class HtmxSwapElementId(HtmxElementId):
 
     def __init__(self, swap=None, tag=None, wrap=True, name=None, add_in_context=True) -> None:
         if swap:
-            self.id = swap.slug_global
+            self.id = swap.id.slug_global
         super().__init__(tag, wrap, name, add_in_context)

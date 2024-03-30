@@ -26,13 +26,20 @@ class BaseWidget(ExtendedTemplateResponseMixin, ExtendedContextMixin, ForeignPro
         response.render()
         return Markup(response)
 
-    def _get(self, instance, owner):
+    def __html__(self):
         return self.rendered_response()
 
     @property
     def slug_property(self):
-        return f'{self.descriptor_name}' if hasattr(self, 'owner') else None
+        return f'{self.descriptor_name}' if self.owner else None
 
     @property
     def slug_global(self):
-        return f'{self.owner.slug_global}_{self.slug_property}' if hasattr(self, 'owner') else super().slug_global
+        if self.view and self.view.is_origin_request and self.owner is self.view.origin_class:
+            return f'{self.view.origin_class.slug_global}_{self.slug_property}'
+        elif self.parent:
+            return f'{self.parent.slug_global}_{self.slug_property}'
+        elif self.owner:
+            return f'{self.owner.slug_global}_{self.slug_property}'
+        else:
+            return super().slug_global

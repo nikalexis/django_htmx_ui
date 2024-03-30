@@ -29,10 +29,10 @@ class HtmlAttribute(HtmlWidget):
 
 class HtmlAttributeId(HtmlAttribute):
 
-    def __init__(self, default=NotDefined, name=None, add_in_context=True) -> None:
-        if default is not NotDefined:
-            default = f'{self.slug_global}'
-        super().__init__(default, name, add_in_context)
+    def __view__(self):
+        if self.value is NotDefined:
+            self.value = f'{self.slug_global}'
+        return super().__view__()
 
 
 class HtmlContent(HtmlWidget):
@@ -62,8 +62,8 @@ class HtmlElement(HtmlContent):
     def wrapper_class(self):
         return HtmlWrapper if self.wrap is True else self.wrap
     
-    def _get(self, instance, owner):
-        response = super()._get(instance, owner)
+    def __html__(self):
+        response = super().__html__()
         
         if self.wrap:
             if self.tag is NotDefined:

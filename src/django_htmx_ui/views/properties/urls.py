@@ -20,11 +20,11 @@ class UrlParameter(UrlBaseProperty):
     def origin_or_partial(self):
         return ('origin' if self.origin else 'partial') + (('/partial' if self.origin else '/origin') if self.fallback else '')
 
-    def locations(self, instance):
+    def locations(self):
         return [
-            instance.location_bar if self.origin else instance.location_req
+            self.view.location_bar if self.origin else self.view.location_req
         ] + ([
-            instance.location_req if self.origin else instance.location_bar
+            self.view.location_req if self.origin else self.view.location_bar
         ] if self.fallback else [])
 
 
@@ -36,8 +36,8 @@ class UrlModelMixin:
         self.filter = filter
         self.field = field
 
-    def _get(self, instance, owner):
-        value = super()._get(instance, owner)
+    def __view__(self):
+        value = super().__view__()
         obj = self.model.objects.get_or_none(**{ self.field: value})
         
         if self.required and obj is None:
@@ -48,8 +48,8 @@ class UrlModelMixin:
 
 class UrlPathParameter(UrlParameter):
 
-    def _get(self, instance, owner):
-        for location in self.locations(instance):
+    def __view__(self):
+        for location in self.locations():
             value = location.resolver_match.kwargs.get(self.name)
             if value is not None:
                 break
@@ -66,8 +66,8 @@ class UrlPathModel(UrlModelMixin, UrlPathParameter):
 
 class UrlQueryParameter(UrlParameter):
 
-    def _get(self, instance, owner):
-        for location in self.locations(instance):
+    def __view__(self):
+        for location in self.locations():
             value = location.query.get(self.name)
             if value is not None:
                 break

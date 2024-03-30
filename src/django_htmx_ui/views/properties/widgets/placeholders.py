@@ -1,7 +1,7 @@
 from typing import Any
 from django_htmx_ui.views.properties.contexts import ContextVariable
 from django_htmx_ui.views.properties.widgets.html import HtmlElement, HtmlElementId
-from django_htmx_ui.views.properties.widgets.htmx import HtmxAttribute, HtmxMethod
+from django_htmx_ui.views.properties.widgets.htmx import HtmxAttribute, HtmxRequestMethod
 
 
 class Placeholder(HtmlElement):
@@ -28,23 +28,24 @@ class PlaceholderId(HtmlElementId):
 
 class Lazyload(Placeholder):
 
-    method = ContextVariable('GET', required=True)
-    url = ContextVariable(required=True)
-
-    hx_method = HtmxMethod()
+    hx_method = HtmxRequestMethod()
     hx_target = HtmxAttribute('this')
     hx_swap = HtmxAttribute('outerHTML')
     hx_trigger = HtmxAttribute('load once delay:0.02s, htmx:afterSettle from:body once delay:0.01s')
 
-    def __init__(self, tag='div', name=None, add_in_context=True) -> None:
+    def __init__(self, method=None, url=None, tag='div', name=None, add_in_context=True) -> None:
+        if method is not None:
+            self.hx_method.method = method
+        if url is not None:
+            self.hx_method.url = url
         super().__init__(tag=tag, name=name, add_in_context=add_in_context)
 
 
 class LazyloadSelf(Lazyload):
 
-    def __init__(self, tag='div', name=None, add_in_context=True) -> None:
-        super().__init__(tag=tag, name=name, add_in_context=add_in_context)
+    def __init__(self, method='GET', tag='div', name=None, add_in_context=True) -> None:
+        super().__init__(method=method, tag=tag, name=name, add_in_context=add_in_context)
 
-    def _get(self, instance, owner):
-        self.url = instance.url
-        return super()._get(instance, owner)
+    def __view__(self):
+        self.hx_method.url = self.view.url
+        return super().__view__()
