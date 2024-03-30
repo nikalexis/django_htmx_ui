@@ -103,7 +103,7 @@ class ExtendedContextMixin(ContextMixin):
     def get_context_data(self, **kwargs):
         context = {
             **super().get_context_data(**kwargs),
-            **{key: self.context[key] for key in self.context.keys()},
+            **self.context.all(),
             **getattr(self, '_context', {}),
         }
         return context

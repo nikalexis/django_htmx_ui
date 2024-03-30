@@ -86,6 +86,18 @@ class Context:
             raise KeyError(f"'{key}' cannot be set, it is used by the descriptor property named '{self._descriptors[key]}' in {self.instance}.")
         self.data.setdefault(key, default)
 
+    def all(self):
+        return {key: self[key] for key in self.keys()}
+
+    def cached(self):
+        return {**self.data}
+
+    def uncached(self):
+        return {
+            key: self.read_from_instance(self._descriptors[key]) if key in self._descriptors.keys() else self.data[key]
+            for key in self.keys()
+        }
+
 
 class ContextManager:
 
