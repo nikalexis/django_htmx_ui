@@ -20,20 +20,22 @@ class BaseProperty:
     def copied_self(self, instance):
         view = getattr(instance, 'view', None)
         
+        view_id = f'__property-view-{id(self)}'
+        descriptor_id = f'__property-descriptor-{id(self)}'
+
         if view:
-            # instance_dict_key = f'__property__{self.descriptor_name}'
-            instance_dict_key = f'__property-{id(self)}'
-            try:
-                copied_self = instance.__dict__[instance_dict_key]
-            except KeyError:
-                copied_self = copy.copy(self)
-                copied_self.view = view
-                copied_self.parent = instance
-                instance.__dict__[instance_dict_key] = copied_self
-            return copied_self
+            instance_dict_key = view_id
         else:
-            self.parent = instance
-            return self
+            instance_dict_key = descriptor_id
+        
+        try:
+            copied_self = instance.__dict__[instance_dict_key]
+        except KeyError:
+            copied_self = copy.copy(instance.__dict__.get(descriptor_id, self) if view else self)
+            copied_self.view = view
+            copied_self.parent = instance
+            instance.__dict__[instance_dict_key] = copied_self
+        return copied_self
 
     def __get__(self, instance, owner=None):
         if instance is None:
