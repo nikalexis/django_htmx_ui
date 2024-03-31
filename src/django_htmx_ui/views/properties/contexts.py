@@ -32,6 +32,16 @@ class ContextCachedProperty(ContextProperty):
         )
 
 
+class ContextStatic(BaseContextProperty):
+
+    def __init__(self, value, name=None, add_in_context=True, cache=True) -> None:
+        self.value = value
+        super().__init__(name, add_in_context, cache)
+
+    def __view__(self):
+        return self.value
+
+
 class ContextVariable(BaseContextProperty):
 
     _getter = None
