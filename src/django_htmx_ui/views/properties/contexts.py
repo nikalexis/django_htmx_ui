@@ -46,15 +46,21 @@ class ContextVariable(BaseContextProperty):
 
     _getter = None
 
-    def __init__(self, default=NotDefined, required=False, name=None, add_in_context=True, cache=True) -> None:
+    def __init__(self, default=NotDefined, converters=(), required=False, name=None, add_in_context=True, cache=True) -> None:
         self.default = default
         self.required = required
+        self.converters = converters
         super().__init__(name, add_in_context, cache)
 
     def __call__(self, getter):
         self._getter = getter
         return self
     
+    def apply_converters(self, value):
+        for converter in reversed(self.converters):
+            value = converter(value)
+        return value
+
     def __view__(self):
         try:
             value = self.parent.context.data[self.name]
@@ -62,11 +68,13 @@ class ContextVariable(BaseContextProperty):
             if self._getter:
                 value = self._getter(self.parent, self)
 
+                value = self.apply_converters(value)
+
                 if self.cache:
                     self.parent.context.data[self.name] = value
 
             else:
-                value = self.default
+                value = self.apply_converters(self.default) if self.default is not NotDefined else self.default
 
         if self.required and value is NotDefined:
             raise ValueError(f"Required context variable '{self.name}' is not defined.")
@@ -74,7 +82,7 @@ class ContextVariable(BaseContextProperty):
         return value
     
     def _set(self, instance, value):
-        instance.context.data[self.name] = value
+        instance.context.data[self.name] = self.apply_converters(value)
 
 
 class ContextAncestor(BaseContextProperty):
