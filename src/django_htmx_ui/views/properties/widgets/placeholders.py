@@ -7,13 +7,13 @@ from django_htmx_ui.views.properties.widgets.htmx import HtmxAttribute, HtmxRequ
 class Placeholder(HtmlElement):
 
     def __init__(self, tag, name=None, add_in_context=True) -> None:
-        super().__init__(tag=tag, wrap=False, name=name, add_in_context=add_in_context)
+        super().__init__(tag=tag, wrap=True, name=name, add_in_context=add_in_context)
 
 
 class PlaceholderId(HtmlElementId):
 
     def __init__(self, tag='div', name=None, add_in_context=True) -> None:
-        super().__init__(tag=tag, wrap=False, name=name, add_in_context=add_in_context)
+        super().__init__(tag=tag, wrap=True, name=name, add_in_context=add_in_context)
 
 
 # class ElementPlaceholderId(PlaceholderId):
