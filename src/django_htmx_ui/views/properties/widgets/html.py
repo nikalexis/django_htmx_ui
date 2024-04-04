@@ -5,6 +5,13 @@ from django_htmx_ui.views.properties.widgets.base import BaseWidget
 from django_htmx_ui.views.properties.widgets.helpers import Join
 
 
+def to_html_name(name):
+    replaced_name = name
+    if replaced_name.endswith('_'):
+        replaced_name = replaced_name[0:-1]
+    return f'{replaced_name}'
+
+
 class HtmlWidget(BaseWidget):
     pass
 
@@ -21,7 +28,7 @@ class HtmlAttribute(HtmlWidget):
 
     @ContextProperty
     def attr(self):
-        return self.name
+        return to_html_name(self.name)
 
     def _set(self, instance, value):
         self.value = value
