@@ -1,16 +1,14 @@
 
-from dataclasses import KW_ONLY, dataclass
+from dataclasses import KW_ONLY
 from typing import Any
-from django_htmx_ui.views.properties.base import BaseProperty
+from django_htmx_ui.views.properties.base import BaseProperty, BasePropertyMixin
 
 
-@dataclass(eq=False)
 class UrlBaseProperty(BaseProperty):
     _: KW_ONLY
     required: bool = True
 
 
-@dataclass(eq=False)
 class UrlParameter(UrlBaseProperty):
     _: KW_ONLY
     origin: bool = False
@@ -28,8 +26,7 @@ class UrlParameter(UrlBaseProperty):
         ] if self.fallback else [])
 
 
-@dataclass(eq=False)
-class UrlModelMixin:
+class UrlModelMixin(BasePropertyMixin):
     model: Any
     _: KW_ONLY
     filter: bool = True
@@ -45,7 +42,6 @@ class UrlModelMixin:
         return obj
 
 
-@dataclass(eq=False)
 class UrlPathParameter(UrlParameter):
 
     def __view__(self):
@@ -60,12 +56,10 @@ class UrlPathParameter(UrlParameter):
         return value
 
 
-@dataclass(eq=False)
 class UrlPathModel(UrlModelMixin, UrlPathParameter):
     pass
 
 
-@dataclass(eq=False)
 class UrlQueryParameter(UrlParameter):
 
     def __view__(self):
@@ -80,6 +74,5 @@ class UrlQueryParameter(UrlParameter):
         return value
 
 
-@dataclass(eq=False)
 class UrlQueryModel(UrlModelMixin, UrlQueryParameter):
     pass

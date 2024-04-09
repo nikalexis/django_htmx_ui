@@ -1,5 +1,5 @@
 
-from dataclasses import KW_ONLY, dataclass
+from dataclasses import KW_ONLY
 from typing import Any
 from django_htmx_ui.defs import NotDefined
 from django_htmx_ui.views.properties.base import BaseProperty
@@ -9,7 +9,6 @@ class BaseContextProperty(BaseProperty):
     pass
 
 
-@dataclass(eq=False)
 class ContextProperty(BaseContextProperty):
     getter: Any
     _: KW_ONLY
@@ -19,7 +18,6 @@ class ContextProperty(BaseContextProperty):
         return self.getter(self.parent)
 
 
-@dataclass(eq=False)
 class ContextCachedProperty(ContextProperty):
     _: KW_ONLY
     cache: bool = True
@@ -31,7 +29,6 @@ class ContextCachedProperty(ContextProperty):
         )
 
 
-@dataclass(eq=False)
 class ContextStatic(BaseContextProperty):
     value: Any
     _: KW_ONLY
@@ -40,7 +37,6 @@ class ContextStatic(BaseContextProperty):
         return self.value
 
 
-@dataclass(eq=False)
 class ContextVariable(BaseContextProperty):
     default: Any = NotDefined
     _: KW_ONLY
@@ -82,7 +78,6 @@ class ContextVariable(BaseContextProperty):
         instance.context.data[self.name] = self.apply_converters(value)
 
 
-@dataclass(eq=False)
 class ContextAncestor(BaseContextProperty):
     foreign_name: str = None
     _: KW_ONLY
@@ -111,7 +106,6 @@ class ContextAncestor(BaseContextProperty):
                 raise ValueError(f"Required context variable '{self.foreign_name}' not found in the context of {self.limit} ancestor(s) of '{instance}'.'{self.descriptor_name}'.")
 
 
-@dataclass(eq=False)
 class ContextParent(ContextAncestor):
     _: KW_ONLY
     limit: int = 1

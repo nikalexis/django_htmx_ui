@@ -2,6 +2,9 @@ import copy
 from dataclasses import KW_ONLY, dataclass
 
 
+properties_dataclass = dataclass(eq=False)
+
+
 class BasePropertyMetaclass(type):
 
     def __call__(self, *args, **kwargs):
@@ -9,7 +12,7 @@ class BasePropertyMetaclass(type):
         return type.__call__(self, *args, **kwargs)
     
 
-@dataclass(eq=False)
+@properties_dataclass
 class BaseProperty(metaclass=BasePropertyMetaclass):
     _: KW_ONLY
     name: str = None
@@ -18,6 +21,10 @@ class BaseProperty(metaclass=BasePropertyMetaclass):
 
     view = None
     parent = None
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        properties_dataclass(cls)
 
     def __init_args__(self, *args, **kwargs):
         return args, kwargs
@@ -76,3 +83,11 @@ class BaseProperty(metaclass=BasePropertyMetaclass):
 
     def __view__(self):
         return self
+
+
+@properties_dataclass
+class BasePropertyMixin(metaclass=BasePropertyMetaclass):
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        properties_dataclass(cls)

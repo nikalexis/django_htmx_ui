@@ -3,7 +3,7 @@ from django_htmx_ui.defs import NotDefined
 from django_htmx_ui.views.properties.contexts import ContextVariable
 from django_htmx_ui.views.properties.widgets.base import BaseWidget
 from django_htmx_ui.views.properties.widgets.helpers import Join
-from dataclasses import KW_ONLY, dataclass
+from dataclasses import KW_ONLY
 
 
 def to_html_name(name):
@@ -17,7 +17,6 @@ class HtmlWidget(BaseWidget):
     pass
 
 
-@dataclass(eq=False)
 class HtmlAttribute(HtmlWidget):
     value: ContextVariable = ContextVariable()
     _: KW_ONLY
@@ -30,7 +29,6 @@ class HtmlAttribute(HtmlWidget):
         self.value = value
 
 
-@dataclass(eq=False)
 class HtmlAttributeId(HtmlAttribute):
 
     def __view__(self):
@@ -47,7 +45,6 @@ class HtmlTag(ContextVariable):
     pass
     
 
-@dataclass(eq=False)
 class HtmlElement(HtmlContent):
     tag: HtmlTag = HtmlTag()
     _: KW_ONLY
@@ -78,7 +75,6 @@ class HtmlWrapper(HtmlElement):
     contents: ContextVariable = ContextVariable()
 
 
-@dataclass(eq=False)
 class HtmlElementId(HtmlElement):
     _: KW_ONLY
     id: HtmlAttributeId = HtmlAttributeId()

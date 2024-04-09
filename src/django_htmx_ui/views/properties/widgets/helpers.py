@@ -1,10 +1,9 @@
 from typing import Any
 from django_htmx_ui.views.properties.contexts import ContextCachedProperty, ContextVariable
 from django_htmx_ui.views.properties.widgets.base import BaseWidget
-from dataclasses import KW_ONLY, dataclass
+from dataclasses import KW_ONLY
 
 
-@dataclass(eq=False)
 class Join(BaseWidget):
     _: KW_ONLY
     include: tuple = ()

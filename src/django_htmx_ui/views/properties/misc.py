@@ -1,9 +1,8 @@
-from dataclasses import KW_ONLY, dataclass
+from dataclasses import KW_ONLY
 from typing import Any
 from django_htmx_ui.views.properties.base import BaseProperty
 
 
-@dataclass(eq=False)
 class Static(BaseProperty):
     value: Any
     _: KW_ONLY
@@ -14,7 +13,6 @@ class Static(BaseProperty):
         return self.value
 
 
-@dataclass(eq=False)
 class Variable(BaseProperty):
     value: Any
     _: KW_ONLY
@@ -28,7 +26,6 @@ class Variable(BaseProperty):
         self.value = value
 
 
-@dataclass(eq=False)
 class Alias(BaseProperty):
     alias: Any
     _: KW_ONLY

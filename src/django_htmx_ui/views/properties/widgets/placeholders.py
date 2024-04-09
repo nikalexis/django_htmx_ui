@@ -1,15 +1,13 @@
 from django_htmx_ui.views.properties.widgets.html import HtmlElement, HtmlElementId, HtmlTag
 from django_htmx_ui.views.properties.widgets.htmx import HtmxAttribute, HtmxRequestMethod
-from dataclasses import KW_ONLY, dataclass
+from dataclasses import KW_ONLY
 
 
-@dataclass(eq=False)
 class Placeholder(HtmlElement):
     tag: HtmlTag = HtmlTag(required=True)
     _: KW_ONLY
 
 
-@dataclass(eq=False)
 class PlaceholderId(HtmlElementId):
     tag: HtmlTag = HtmlTag('div', required=True)
     _: KW_ONLY
@@ -25,7 +23,6 @@ class PlaceholderId(HtmlElementId):
 #         super().__init__(tag=tag or element.tag, name=name, add_in_context=add_in_context)
 
 
-@dataclass(eq=False)
 class Lazyload(Placeholder):
     method: str
     url: str
@@ -42,7 +39,6 @@ class Lazyload(Placeholder):
         self.hx_method.url = self.url
 
 
-@dataclass(eq=False)
 class LazyloadSelf(Lazyload):
     method: str = 'GET'
     url: str = ''

@@ -2,7 +2,7 @@ from typing import Any
 from django_htmx_ui.views.properties.contexts import ContextProperty, ContextVariable
 from django_htmx_ui.views.properties.misc import Alias
 from django_htmx_ui.views.properties.widgets.html import HtmlAttribute, HtmlElementId
-from dataclasses import KW_ONLY, dataclass
+from dataclasses import KW_ONLY
 
 
 def to_htmx_name(name, force_prepend='hx-'):
@@ -17,7 +17,6 @@ class HtmxAttribute(HtmlAttribute):
         super().__set_name__(owner, to_htmx_name(name))
 
 
-@dataclass(eq=False)
 class HtmxRequestMethod(HtmxAttribute):
     _: KW_ONLY
     method: ContextVariable = ContextVariable(required=True)
@@ -65,7 +64,6 @@ class HtmxElementId(HtmlElementId):
     pass
 
 
-@dataclass(eq=False)
 class HtmxSwapElementId(HtmxElementId):
     _: KW_ONLY
     swap: Any = None
