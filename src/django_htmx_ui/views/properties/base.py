@@ -1,15 +1,26 @@
 import copy
+from dataclasses import KW_ONLY, dataclass
 
 
-class BaseProperty:
+class BasePropertyMetaclass(type):
+
+    def __call__(self, *args, **kwargs):
+        args, kwargs = self.__init_args__(self, *args, **kwargs)
+        return type.__call__(self, *args, **kwargs)
+    
+
+@dataclass(eq=False)
+class BaseProperty(metaclass=BasePropertyMetaclass):
+    _: KW_ONLY
+    name: str = None
+    add_in_context: bool = True
+    cache: bool = True
 
     view = None
     parent = None
 
-    def __init__(self, name=None, add_in_context=True, cache=True) -> None:
-        self.name = name
-        self.add_in_context = add_in_context
-        self.cache = cache
+    def __init_args__(self, *args, **kwargs):
+        return args, kwargs
 
     def __set_name__(self, owner, name):
         self.owner = owner
@@ -51,7 +62,8 @@ class BaseProperty:
             return self
 
     def __set__(self, instance, value):
-        self.copied_self(instance)._set(instance, value)
+        if not isinstance(value, type(self)):
+            self.copied_self(instance)._set(instance, value)
     
     def _set(self, instance, value):
         raise AttributeError(f"Cannot set attribute, a _set function is not defined for '{self}'.")

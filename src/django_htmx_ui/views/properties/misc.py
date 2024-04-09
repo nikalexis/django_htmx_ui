@@ -1,21 +1,25 @@
+from dataclasses import KW_ONLY, dataclass
+from typing import Any
 from django_htmx_ui.views.properties.base import BaseProperty
 
 
+@dataclass(eq=False)
 class Static(BaseProperty):
-
-    def __init__(self, value, name=None, add_in_context=False, cache=False) -> None:
-        self.value = value
-        super().__init__(name, add_in_context, cache)
+    value: Any
+    _: KW_ONLY
+    add_in_context: bool = False
+    cache: bool = False
 
     def __view__(self):
         return self.value
 
 
+@dataclass(eq=False)
 class Variable(BaseProperty):
-
-    def __init__(self, value, name=None, add_in_context=False, cache=False) -> None:
-        self.value = value
-        super().__init__(name, add_in_context, cache)
+    value: Any
+    _: KW_ONLY
+    add_in_context: bool = False
+    cache: bool = False
 
     def __view__(self):
         return self.value
@@ -24,11 +28,11 @@ class Variable(BaseProperty):
         self.value = value
 
 
+@dataclass(eq=False)
 class Alias(BaseProperty):
-
-    def __init__(self, alias, name=None, add_in_context=True, cache=True) -> None:
-        self.alias = alias
-        super().__init__(name, add_in_context, cache)
+    alias: Any
+    _: KW_ONLY
+    cache: bool = False
 
     @property
     def alias_name(self):

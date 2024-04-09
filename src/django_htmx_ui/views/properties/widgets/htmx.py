@@ -1,6 +1,8 @@
+from typing import Any
 from django_htmx_ui.views.properties.contexts import ContextProperty, ContextVariable
 from django_htmx_ui.views.properties.misc import Alias
 from django_htmx_ui.views.properties.widgets.html import HtmlAttribute, HtmlElementId
+from dataclasses import KW_ONLY, dataclass
 
 
 def to_htmx_name(name, force_prepend='hx-'):
@@ -15,16 +17,12 @@ class HtmxAttribute(HtmlAttribute):
         super().__set_name__(owner, to_htmx_name(name))
 
 
+@dataclass(eq=False)
 class HtmxRequestMethod(HtmxAttribute):
-
-    method = ContextVariable(required=True)
-    url = ContextVariable(required=True)
-    value = Alias(url)
-
-    def __init__(self, method=None, add_in_context=True) -> None:
-        if method is not None:
-            self.method = method
-        super().__init__(add_in_context=add_in_context)
+    _: KW_ONLY
+    method: ContextVariable = ContextVariable(required=True)
+    url: ContextVariable = ContextVariable(required=True)
+    value: Alias = Alias(url)
 
     @ContextProperty
     def attr(self):
@@ -51,15 +49,29 @@ class HtmxDelete(HtmxRequestMethod):
     method = ContextVariable('DELETE', required=True)
 
 
+class HtmxTarget(HtmxAttribute):
+    pass
+
+
+class HtmxSwap(HtmxAttribute):
+    pass
+
+
+class HtmxTrigger(HtmxAttribute):
+    pass
+
+
 class HtmxElementId(HtmlElementId):
     pass
 
 
+@dataclass(eq=False)
 class HtmxSwapElementId(HtmxElementId):
-
+    _: KW_ONLY
+    swap: Any = None
+    
     hx_swap_oob = HtmxAttribute('outerHTML')
 
-    def __init__(self, swap=None, tag=None, wrap=True, name=None, add_in_context=True) -> None:
-        if swap:
-            self.id = swap.id.slug_global
-        super().__init__(tag, wrap, name, add_in_context)
+    def __post_init__(self):
+        if self.swap:
+            self.id = self.swap.id.slug_global

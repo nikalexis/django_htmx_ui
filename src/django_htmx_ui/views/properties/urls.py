@@ -1,20 +1,20 @@
 
+from dataclasses import KW_ONLY, dataclass
+from typing import Any
 from django_htmx_ui.views.properties.base import BaseProperty
 
 
+@dataclass(eq=False)
 class UrlBaseProperty(BaseProperty):
-
-    def __init__(self, name=None, required=True, add_in_context=True) -> None:
-        super().__init__(name, add_in_context)
-        self.required = required
+    _: KW_ONLY
+    required: bool = True
 
 
+@dataclass(eq=False)
 class UrlParameter(UrlBaseProperty):
-
-    def __init__(self, name=None, required=True, add_in_context=True, origin=False, fallback=True) -> None:
-        super().__init__(name, required, add_in_context)
-        self.origin = origin
-        self.fallback = fallback
+    _: KW_ONLY
+    origin: bool = False
+    fallback: bool = True
 
     @property
     def origin_or_partial(self):
@@ -28,13 +28,12 @@ class UrlParameter(UrlBaseProperty):
         ] if self.fallback else [])
 
 
+@dataclass(eq=False)
 class UrlModelMixin:
-    
-    def __init__(self, model, name=None, required=True, add_in_context=True, origin=False, filter=True, field='pk') -> None:
-        super().__init__(name, required, add_in_context, origin)
-        self.model = model
-        self.filter = filter
-        self.field = field
+    model: Any
+    _: KW_ONLY
+    filter: bool = True
+    field: str = 'pk'
 
     def __view__(self):
         value = super().__view__()
@@ -46,6 +45,7 @@ class UrlModelMixin:
         return obj
 
 
+@dataclass(eq=False)
 class UrlPathParameter(UrlParameter):
 
     def __view__(self):
@@ -60,10 +60,12 @@ class UrlPathParameter(UrlParameter):
         return value
 
 
+@dataclass(eq=False)
 class UrlPathModel(UrlModelMixin, UrlPathParameter):
     pass
 
 
+@dataclass(eq=False)
 class UrlQueryParameter(UrlParameter):
 
     def __view__(self):
@@ -78,5 +80,6 @@ class UrlQueryParameter(UrlParameter):
         return value
 
 
+@dataclass(eq=False)
 class UrlQueryModel(UrlModelMixin, UrlQueryParameter):
     pass

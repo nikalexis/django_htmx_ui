@@ -1,4 +1,6 @@
 
+from dataclasses import KW_ONLY, dataclass
+from typing import Any
 from django_htmx_ui.defs import NotDefined
 from django_htmx_ui.views.properties.base import BaseProperty
 
@@ -7,53 +9,48 @@ class BaseContextProperty(BaseProperty):
     pass
 
 
+@dataclass(eq=False)
 class ContextProperty(BaseContextProperty):
-
-    _getter = None
-
-    def __init__(self, getter, name=None) -> None:
-        self._getter = getter
-        super(BaseContextProperty, self).__init__(name, add_in_context=True, cache=False)
+    getter: Any
+    _: KW_ONLY
+    cache: bool = False
 
     def __view__(self):
-        return self._getter(self.parent)
+        return self.getter(self.parent)
 
 
+@dataclass(eq=False)
 class ContextCachedProperty(ContextProperty):
-
-    def __init__(self, getter, name=None) -> None:
-        self._getter = getter
-        super(BaseContextProperty, self).__init__(name, add_in_context=True, cache=True)
+    _: KW_ONLY
+    cache: bool = True
 
     def __view__(self):
         return self.parent.context.data.setdefault(
             self.name,
-            self._getter(self.parent),
+            self.getter(self.parent),
         )
 
 
+@dataclass(eq=False)
 class ContextStatic(BaseContextProperty):
-
-    def __init__(self, value, name=None, add_in_context=True, cache=True) -> None:
-        self.value = value
-        super().__init__(name, add_in_context, cache)
+    value: Any
+    _: KW_ONLY
 
     def __view__(self):
         return self.value
 
 
+@dataclass(eq=False)
 class ContextVariable(BaseContextProperty):
+    default: Any = NotDefined
+    _: KW_ONLY
+    converters: tuple = ()
+    required: bool = False
 
-    _getter = None
-
-    def __init__(self, default=NotDefined, converters=(), required=False, name=None, add_in_context=True, cache=True) -> None:
-        self.default = default
-        self.required = required
-        self.converters = converters
-        super().__init__(name, add_in_context, cache)
+    getter = None
 
     def __call__(self, getter):
-        self._getter = getter
+        self.getter = getter
         return self
     
     def apply_converters(self, value):
@@ -65,8 +62,8 @@ class ContextVariable(BaseContextProperty):
         try:
             value = self.parent.context.data[self.name]
         except KeyError:
-            if self._getter:
-                value = self._getter(self.parent, self)
+            if self.getter:
+                value = self.getter(self.parent, self)
 
                 value = self.apply_converters(value)
 
@@ -85,13 +82,12 @@ class ContextVariable(BaseContextProperty):
         instance.context.data[self.name] = self.apply_converters(value)
 
 
+@dataclass(eq=False)
 class ContextAncestor(BaseContextProperty):
-
-    def __init__(self, foreign_name=None, required=True, limit=None, name=None, add_in_context=True) -> None:
-        super().__init__(name, add_in_context, cache=False)
-        self.required = required
-        self.foreign_name = foreign_name
-        self.limit = limit
+    foreign_name: str = None
+    _: KW_ONLY
+    required: bool = True
+    limit: int = None
 
     def __set_name__(self, owner, name):
         super().__set_name__(owner, name)
@@ -115,8 +111,7 @@ class ContextAncestor(BaseContextProperty):
                 raise ValueError(f"Required context variable '{self.foreign_name}' not found in the context of {self.limit} ancestor(s) of '{instance}'.'{self.descriptor_name}'.")
 
 
+@dataclass(eq=False)
 class ContextParent(ContextAncestor):
-
-    def __init__(self, foreign_name=None, required=True, name=None, add_in_context=True) -> None:
-        limit = 1
-        super().__init__(foreign_name, required, limit, name, add_in_context)
+    _: KW_ONLY
+    limit: int = 1

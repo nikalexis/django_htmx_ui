@@ -3,6 +3,7 @@ from django_htmx_ui.defs import NotDefined
 from django_htmx_ui.views.properties.contexts import ContextVariable
 from django_htmx_ui.views.properties.widgets.base import BaseWidget
 from django_htmx_ui.views.properties.widgets.helpers import Join
+from dataclasses import KW_ONLY, dataclass
 
 
 def to_html_name(name):
@@ -16,15 +17,10 @@ class HtmlWidget(BaseWidget):
     pass
 
 
+@dataclass(eq=False)
 class HtmlAttribute(HtmlWidget):
-
-    value = ContextVariable()
-
-    def __init__(self, default=NotDefined, name=None, add_in_context=True) -> None:
-        self.default = default
-        if self.default is not NotDefined:
-            self.value = self.default
-        super().__init__(name, add_in_context)
+    value: ContextVariable = ContextVariable()
+    _: KW_ONLY
 
     @ContextProperty
     def attr(self):
@@ -34,6 +30,7 @@ class HtmlAttribute(HtmlWidget):
         self.value = value
 
 
+@dataclass(eq=False)
 class HtmlAttributeId(HtmlAttribute):
 
     def __view__(self):
@@ -43,27 +40,20 @@ class HtmlAttributeId(HtmlAttribute):
 
 
 class HtmlContent(HtmlWidget):
-
-    def __init__(self, name=None, add_in_context=True) -> None:
-        super().__init__(name, add_in_context)
+    pass
 
 
 class HtmlTag(ContextVariable):
     pass
     
 
+@dataclass(eq=False)
 class HtmlElement(HtmlContent):
-
-    tag = HtmlTag()
-    attributes = Join(HtmlAttribute, separator=' ')
-    contents = Join(HtmlContent, separator='\n')
-
-    def __init__(self, tag=None, wrap=True, name=None, add_in_context=True) -> None:
-        if tag is not None:
-            self.tag = tag
-        self.wrap = wrap
-
-        super().__init__(name, add_in_context)
+    tag: HtmlTag = HtmlTag()
+    _: KW_ONLY
+    attributes: Join = Join(HtmlAttribute, separator=' ')
+    contents: Join = Join(HtmlContent, separator='\n')
+    wrap: bool = True
 
     @property
     def wrapper_class(self):
@@ -83,18 +73,12 @@ class HtmlElement(HtmlContent):
 
 
 class HtmlWrapper(HtmlElement):
-
-    tag = HtmlTag(required=True)
-    attributes = ContextVariable()
-    contents = ContextVariable()
-
-    def __init__(self, tag, attributes, contents) -> None:
-        self.tag = tag
-        self.attributes = attributes
-        self.contents = contents
-        super().__init__(tag=tag, wrap=False, name=None, add_in_context=False)
+    tag: HtmlTag = HtmlTag(required=True)
+    attributes: ContextVariable = ContextVariable()
+    contents: ContextVariable = ContextVariable()
 
 
+@dataclass(eq=False)
 class HtmlElementId(HtmlElement):
-
-    id = HtmlAttributeId()
+    _: KW_ONLY
+    id: HtmlAttributeId = HtmlAttributeId()

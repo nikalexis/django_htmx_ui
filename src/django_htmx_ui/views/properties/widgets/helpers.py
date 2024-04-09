@@ -1,22 +1,23 @@
-from django_htmx_ui.views.properties.contexts import ContextCachedProperty, ContextProperty
-from django_htmx_ui.defs import NotDefined
-from django_htmx_ui.views.properties.base import BaseProperty
+from typing import Any
+from django_htmx_ui.views.properties.contexts import ContextCachedProperty, ContextVariable
 from django_htmx_ui.views.properties.widgets.base import BaseWidget
+from dataclasses import KW_ONLY, dataclass
 
 
+@dataclass(eq=False)
 class Join(BaseWidget):
+    _: KW_ONLY
+    include: tuple = ()
+    exclude: tuple = ()
+    filter: Any = bool
+    separator: ContextVariable = ContextVariable('')
+    ancestors: int = 0
+    cache: bool = False
 
-    def __init__(self, *include_args, include=(), exclude=(), filter=bool, separator='', ancestors=0, name=None, add_in_context=True) -> None:
-        self.include = tuple(set(include_args) | set(include))
-        self.exclude = exclude
-        self.filter = filter
-        self._separator = separator
-        self.ancestors = ancestors
-        super().__init__(name, add_in_context)
-
-    @ContextProperty
-    def separator(self):
-        return self._separator
+    def __init_args__(self, *args, **kwargs):
+        if args:
+            kwargs['include'] = tuple(set(args) | set(kwargs.get('include', ())))
+        return (), kwargs
 
     @ContextCachedProperty
     def contents(self):

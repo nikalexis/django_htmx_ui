@@ -1,19 +1,18 @@
-from typing import Any
-from django_htmx_ui.views.properties.contexts import ContextVariable
-from django_htmx_ui.views.properties.widgets.html import HtmlElement, HtmlElementId
+from django_htmx_ui.views.properties.widgets.html import HtmlElement, HtmlElementId, HtmlTag
 from django_htmx_ui.views.properties.widgets.htmx import HtmxAttribute, HtmxRequestMethod
+from dataclasses import KW_ONLY, dataclass
 
 
+@dataclass(eq=False)
 class Placeholder(HtmlElement):
+    tag: HtmlTag = HtmlTag(required=True)
+    _: KW_ONLY
 
-    def __init__(self, tag, name=None, add_in_context=True) -> None:
-        super().__init__(tag=tag, wrap=True, name=name, add_in_context=add_in_context)
 
-
+@dataclass(eq=False)
 class PlaceholderId(HtmlElementId):
-
-    def __init__(self, tag='div', name=None, add_in_context=True) -> None:
-        super().__init__(tag=tag, wrap=True, name=name, add_in_context=add_in_context)
+    tag: HtmlTag = HtmlTag('div', required=True)
+    _: KW_ONLY
 
 
 # class ElementPlaceholderId(PlaceholderId):
@@ -26,25 +25,28 @@ class PlaceholderId(HtmlElementId):
 #         super().__init__(tag=tag or element.tag, name=name, add_in_context=add_in_context)
 
 
+@dataclass(eq=False)
 class Lazyload(Placeholder):
+    method: str
+    url: str
+    _: KW_ONLY
+    tag: HtmlTag = HtmlTag('div', required=True)
 
     hx_method = HtmxRequestMethod()
     hx_target = HtmxAttribute('this')
     hx_swap = HtmxAttribute('outerHTML')
     hx_trigger = HtmxAttribute('load once delay:0.02s, htmx:afterSettle from:body once delay:0.01s')
 
-    def __init__(self, method=None, url=None, tag='div', name=None, add_in_context=True) -> None:
-        if method is not None:
-            self.hx_method.method = method
-        if url is not None:
-            self.hx_method.url = url
-        super().__init__(tag=tag, name=name, add_in_context=add_in_context)
+    def __post_init__(self):
+        self.hx_method.method = self.method
+        self.hx_method.url = self.url
 
 
+@dataclass(eq=False)
 class LazyloadSelf(Lazyload):
-
-    def __init__(self, method='GET', tag='div', name=None, add_in_context=True) -> None:
-        super().__init__(method=method, tag=tag, name=name, add_in_context=add_in_context)
+    method: str = 'GET'
+    url: str = ''
+    _: KW_ONLY
 
     def __view__(self):
         self.hx_method.url = self.view.url
