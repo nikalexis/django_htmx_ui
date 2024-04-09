@@ -1,9 +1,9 @@
 from markupsafe import Markup
 from django_htmx_ui.views.base import ExtendedContextMixin, ExtendedTemplateResponseMixin
-from django_htmx_ui.views.properties.base import ForeignProperty
+from django_htmx_ui.views.properties.base import BaseProperty
 
 
-class BaseWidget(ExtendedTemplateResponseMixin, ExtendedContextMixin, ForeignProperty):
+class BaseWidget(ExtendedTemplateResponseMixin, ExtendedContextMixin, BaseProperty):
 
     def __new__(cls, *args, **kwargs):
         cls._template_names_cro = [

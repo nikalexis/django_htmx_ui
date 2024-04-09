@@ -76,7 +76,3 @@ class BaseProperty(metaclass=BasePropertyMetaclass):
 
     def __view__(self):
         return self
-
-
-class ForeignProperty(BaseProperty):
-    pass
