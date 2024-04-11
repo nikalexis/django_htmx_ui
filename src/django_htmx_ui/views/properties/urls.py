@@ -1,10 +1,10 @@
 
 from dataclasses import KW_ONLY
 from typing import Any
-from django_htmx_ui.views.properties.base import BaseProperty, BasePropertyMixin
+from django_htmx_ui.views.properties.base import BasePropertyMixin, BaseValueProperty
 
 
-class UrlBaseProperty(BaseProperty):
+class UrlBaseProperty(BaseValueProperty):
     _: KW_ONLY
     required: bool = True
 

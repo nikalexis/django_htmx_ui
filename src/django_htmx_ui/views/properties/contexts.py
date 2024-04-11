@@ -3,10 +3,10 @@ from dataclasses import KW_ONLY
 import inspect
 from typing import Any
 from django_htmx_ui.defs import NotDefined
-from django_htmx_ui.views.properties.base import BaseProperty
+from django_htmx_ui.views.properties.base import BaseValueProperty
 
 
-class BaseContextProperty(BaseProperty):
+class BaseContextProperty(BaseValueProperty):
     pass
 
 

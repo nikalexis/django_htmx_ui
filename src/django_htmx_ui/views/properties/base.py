@@ -21,6 +21,7 @@ class BaseProperty(metaclass=BasePropertyMetaclass):
 
     view = None
     parent = None
+    copy_of = None
 
     @property
     def ancestors(self):
@@ -56,9 +57,11 @@ class BaseProperty(metaclass=BasePropertyMetaclass):
         try:
             copied_self = instance.__dict__[instance_dict_key]
         except KeyError:
-            copied_self = copy.copy(instance.__dict__.get(descriptor_id, self) if view else self)
+            copy_of = instance.__dict__.get(descriptor_id, self) if view else self
+            copied_self = copy.copy(copy_of)
             copied_self.view = view
             copied_self.parent = instance
+            copied_self.copy_of = copy_of
             instance.__dict__[instance_dict_key] = copied_self
         return copied_self
 
@@ -70,13 +73,10 @@ class BaseProperty(metaclass=BasePropertyMetaclass):
             return copied_self._get(instance, owner)
     
     def _get(self, instance, owner):
-        if self.view:
-            return self.__view__()
-        else:
-            return self
+        return self
 
     def __set__(self, instance, value):
-        if not isinstance(value, type(self)):
+        if value is not self:
             self.copied_self(instance)._set(instance, value)
     
     def _set(self, instance, value):
@@ -98,3 +98,16 @@ class BasePropertyMixin(metaclass=BasePropertyMetaclass):
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         properties_dataclass(cls)
+
+
+class BaseValueProperty(BaseProperty):
+
+    def _get(self, instance, owner):
+        home = list(self.ancestors)[-1]
+        if isinstance(home, BaseProperty) and not home.copy_of:
+            return self
+        else:
+            return self.__view__()
+
+    def __view__(self):
+        raise NotImplementedError()

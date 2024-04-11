@@ -1,5 +1,5 @@
 import copy
-from django_htmx_ui.views.properties.base import BaseProperty
+from django_htmx_ui.views.properties.base import BaseProperty, BaseValueProperty
 
 
 class Context:
@@ -27,7 +27,9 @@ class Context:
         return getattr(descriptor, 'add_in_context', True)
 
     def read_from_instance(self, descriptor_name):
-        return getattr(self.instance, descriptor_name)
+        descriptor = getattr(self.instance.__class__, descriptor_name)
+        value = getattr(self.instance, descriptor_name)
+        return value if isinstance(descriptor, BaseValueProperty) else value.__view__()
 
     def include(self, *args):
         include = set(self._include) | set(args)
