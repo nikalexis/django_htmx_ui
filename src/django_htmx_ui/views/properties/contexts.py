@@ -1,5 +1,6 @@
 
 from dataclasses import KW_ONLY
+import inspect
 from typing import Any
 from django_htmx_ui.defs import NotDefined
 from django_htmx_ui.views.properties.base import BaseProperty
@@ -49,6 +50,15 @@ class ContextVariable(BaseContextProperty):
         self.getter = getter
         return self
     
+    @property
+    def getter_ancestor(self):
+        candidates = [ancestor for ancestor in self.ancestors if type(ancestor) is inspect._findclass(self.getter)]
+        if not candidates:
+            raise ValueError(f"Getter function '{self.getter}' cannot be found in ancestors list for object '{self}'.")
+        elif len(candidates) > 1:
+            raise ValueError(f"Getter function '{self.getter}' found in {len(candidates)} ancestors for object '{self}'.")
+        return candidates[0]
+    
     def apply_converters(self, value):
         for converter in reversed(self.converters):
             value = converter(value)
@@ -59,7 +69,7 @@ class ContextVariable(BaseContextProperty):
             value = self.parent.context.data[self.name]
         except KeyError:
             if self.getter:
-                value = self.getter(self.parent, self)
+                value = self.getter(self.getter_ancestor)
 
                 value = self.apply_converters(value)
 

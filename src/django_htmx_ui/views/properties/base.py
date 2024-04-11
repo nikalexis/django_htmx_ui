@@ -22,6 +22,13 @@ class BaseProperty(metaclass=BasePropertyMetaclass):
     view = None
     parent = None
 
+    @property
+    def ancestors(self):
+        ancestor = self.parent
+        while ancestor:
+            yield ancestor
+            ancestor = getattr(ancestor, 'parent', None)
+
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         properties_dataclass(cls)
