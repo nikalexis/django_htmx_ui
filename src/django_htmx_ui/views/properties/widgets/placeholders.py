@@ -44,6 +44,6 @@ class LazyloadSelf(Lazyload):
     url: str = ''
     _: KW_ONLY
 
-    def __view__(self):
+    def __context__(self):
         self.hx_method.url = self.view.url
-        return super().__view__()
+        return super().__context__()

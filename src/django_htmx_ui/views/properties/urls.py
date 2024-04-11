@@ -32,8 +32,8 @@ class UrlModelMixin(BasePropertyMixin):
     filter: bool = True
     field: str = 'pk'
 
-    def __view__(self):
-        value = super().__view__()
+    def __context__(self):
+        value = super().__context__()
         obj = self.model.objects.get_or_none(**{ self.field: value})
         
         if self.required and obj is None:
@@ -44,7 +44,7 @@ class UrlModelMixin(BasePropertyMixin):
 
 class UrlPathParameter(UrlParameter):
 
-    def __view__(self):
+    def __context__(self):
         for location in self.locations():
             value = location.resolver_match.kwargs.get(self.name)
             if value is not None:
@@ -62,7 +62,7 @@ class UrlPathModel(UrlModelMixin, UrlPathParameter):
 
 class UrlQueryParameter(UrlParameter):
 
-    def __view__(self):
+    def __context__(self):
         for location in self.locations():
             value = location.query.get(self.name)
             if value is not None:

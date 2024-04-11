@@ -9,7 +9,7 @@ class Static(BaseProperty):
     add_in_context: bool = False
     cache: bool = False
 
-    def __view__(self):
+    def __context__(self):
         return self.value
 
 
@@ -19,7 +19,7 @@ class Variable(BaseProperty):
     add_in_context: bool = False
     cache: bool = False
 
-    def __view__(self):
+    def __context__(self):
         return self.value
 
     def _set(self, instance, value):
@@ -35,7 +35,7 @@ class Alias(BaseProperty):
     def alias_name(self):
         return self.alias if type(self.alias) is str else self.alias.descriptor_name
 
-    def __view__(self):
+    def __context__(self):
         return getattr(self.parent, self.alias_name)
 
     def _set(self, instance, value):

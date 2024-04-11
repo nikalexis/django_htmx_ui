@@ -15,7 +15,7 @@ class ContextProperty(BaseContextProperty):
     _: KW_ONLY
     cache: bool = False
 
-    def __view__(self):
+    def __context__(self):
         return self.getter(self.parent)
 
 
@@ -23,7 +23,7 @@ class ContextCachedProperty(ContextProperty):
     _: KW_ONLY
     cache: bool = True
 
-    def __view__(self):
+    def __context__(self):
         return self.parent.context.data.setdefault(
             self.name,
             self.getter(self.parent),
@@ -34,7 +34,7 @@ class ContextStatic(BaseContextProperty):
     value: Any
     _: KW_ONLY
 
-    def __view__(self):
+    def __context__(self):
         return self.value
 
 
@@ -64,7 +64,7 @@ class ContextVariable(BaseContextProperty):
             value = converter(value)
         return value
 
-    def __view__(self):
+    def __context__(self):
         try:
             value = self.parent.context.data[self.name]
         except KeyError:
@@ -99,7 +99,7 @@ class ContextAncestor(BaseContextProperty):
         if self.foreign_name is None:
             self.foreign_name = self.name
 
-    def __view__(self):
+    def __context__(self):
         try:
             ancestor = self.parent
             counter = 1

@@ -31,10 +31,10 @@ class HtmlAttribute(HtmlWidget):
 
 class HtmlAttributeId(HtmlAttribute):
 
-    def __view__(self):
+    def __context__(self):
         if self.value is NotDefined:
             self.value = f'{self.slug_global}'
-        return super().__view__()
+        return super().__context__()
 
 
 class HtmlContent(HtmlWidget):

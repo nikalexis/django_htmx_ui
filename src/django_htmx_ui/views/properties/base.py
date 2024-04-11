@@ -88,7 +88,7 @@ class BaseProperty(metaclass=BasePropertyMetaclass):
     def _del(self, instance):
         raise AttributeError(f"Cannot delete attribute, a _del function is not defined for '{self}'.")
 
-    def __view__(self):
+    def __context__(self):
         return self
 
 
@@ -107,7 +107,7 @@ class BaseValueProperty(BaseProperty):
         if isinstance(home, BaseProperty) and not home.copy_of:
             return self
         else:
-            return self.__view__()
+            return self.__context__()
 
-    def __view__(self):
+    def __context__(self):
         raise NotImplementedError()

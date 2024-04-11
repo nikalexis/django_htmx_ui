@@ -29,7 +29,7 @@ class Context:
     def read_from_instance(self, descriptor_name):
         descriptor = getattr(self.instance.__class__, descriptor_name)
         value = getattr(self.instance, descriptor_name)
-        return value if isinstance(descriptor, BaseValueProperty) else value.__view__()
+        return value if isinstance(descriptor, BaseValueProperty) else value.__context__()
 
     def include(self, *args):
         include = set(self._include) | set(args)
