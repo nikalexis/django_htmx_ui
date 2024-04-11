@@ -103,7 +103,7 @@ class ContextAncestor(BaseContextProperty):
                 counter += 1
         except (KeyError, AttributeError):
             if self.required:
-                raise ValueError(f"Required context variable '{self.foreign_name}' not found in the context of {self.limit} ancestor(s) of '{instance}'.'{self.descriptor_name}'.")
+                raise ValueError(f"Required context variable '{self.foreign_name}' not found in the context of {self.limit} ancestor(s) of '{self.parent}'.'{self.descriptor_name}'.")
 
 
 class ContextParent(ContextAncestor):
