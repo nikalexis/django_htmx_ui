@@ -9,7 +9,21 @@ class BasePropertyMetaclass(type):
 
     def __call__(self, *args, **kwargs):
         args, kwargs = self.__init_args__(self, *args, **kwargs)
-        return type.__call__(self, *args, **kwargs)
+
+        self.magic_kwargs = {key: value for key, value in kwargs.items() if '__' in key}
+        if self.magic_kwargs:
+            kwargs = {key: value for key, value in kwargs.items() if key not in self.magic_kwargs}
+        
+        new_self = type.__call__(self, *args, **kwargs)
+
+        for key, value in self.magic_kwargs.items():
+            *attrs, last = key.split('__')
+            p = new_self
+            for attr in attrs:
+                p = getattr(p, attr)
+            setattr(p, last, value)
+
+        return new_self
     
 
 @properties_dataclass
@@ -18,6 +32,8 @@ class BaseProperty(metaclass=BasePropertyMetaclass):
     name: str = None
     add_in_context: bool = True
     cache: bool = True
+
+    magic_kwargs = None
 
     view = None
     parent = None
