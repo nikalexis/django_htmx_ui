@@ -87,6 +87,12 @@ class ContextVariable(BaseContextProperty):
     def _set(self, instance, value):
         instance.context.data[self.name] = self.apply_converters(value)
 
+    def _del(self, instance):
+        try:
+            del instance.context.data[self.name]
+        except KeyError:
+            pass
+
 
 class ContextAncestor(BaseContextProperty):
     foreign_name: str = None
