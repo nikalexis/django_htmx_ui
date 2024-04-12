@@ -4,6 +4,7 @@ import inspect
 from typing import Any
 from django_htmx_ui.defs import NotDefined
 from django_htmx_ui.views.properties.base import BaseValueProperty
+from django_htmx_ui.views.properties.mixins import GetterMixin
 
 
 class BaseContextProperty(BaseValueProperty):
@@ -38,29 +39,12 @@ class ContextStatic(BaseContextProperty):
         return self.value
 
 
-class ContextVariable(BaseContextProperty):
+class ContextVariable(GetterMixin, BaseContextProperty):
     default: Any = NotDefined
     _: KW_ONLY
     converters: tuple = ()
     required: bool = False
 
-    getter = None
-
-    def __call__(self, getter):
-        if self.parent and self.name in self.parent.context.data:
-            raise ValueError('Cannot set a getter function after setting up a value for the ContextVariable property.')
-        self.getter = getter
-        return self
-    
-    @property
-    def getter_ancestor(self):
-        candidates = [ancestor for ancestor in self.ancestors if type(ancestor) is inspect._findclass(self.getter)]
-        if not candidates:
-            raise ValueError(f"Getter function '{self.getter}' cannot be found in ancestors list for object '{self}'.")
-        elif len(candidates) > 1:
-            raise ValueError(f"Getter function '{self.getter}' found in {len(candidates)} ancestors for object '{self}'.")
-        return candidates[0]
-    
     def apply_converters(self, value):
         for converter in reversed(self.converters):
             value = converter(value)
@@ -71,7 +55,7 @@ class ContextVariable(BaseContextProperty):
             value = self.parent.context.data[self.name]
         except KeyError:
             if self.getter:
-                value = self.getter(self.getter_ancestor)
+                value = self.getter_value
 
                 value = self.apply_converters(value)
 
