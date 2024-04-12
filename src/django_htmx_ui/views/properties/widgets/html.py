@@ -25,6 +25,9 @@ class HtmlAttribute(HtmlWidget):
     def attr(self):
         return to_html_name(self.name)
 
+    def __call__(self, getter):
+        self.value(getter)
+
     def _set(self, instance, value):
         self.value = value
 
