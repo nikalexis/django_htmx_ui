@@ -47,6 +47,8 @@ class ContextVariable(BaseContextProperty):
     getter = None
 
     def __call__(self, getter):
+        if self.parent and self.name in self.parent.context.data:
+            raise ValueError('Cannot set a getter function after setting up a value for the ContextVariable property.')
         self.getter = getter
         return self
     
