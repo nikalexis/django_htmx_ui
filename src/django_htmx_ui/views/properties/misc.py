@@ -1,9 +1,9 @@
 from dataclasses import KW_ONLY
 from typing import Any
-from django_htmx_ui.views.properties.base import BaseProperty
+from django_htmx_ui.views.properties.base import BaseValueProperty
 
 
-class Static(BaseProperty):
+class Static(BaseValueProperty):
     value: Any
     _: KW_ONLY
     add_in_context: bool = False
@@ -13,7 +13,7 @@ class Static(BaseProperty):
         return self.value
 
 
-class Variable(BaseProperty):
+class Variable(BaseValueProperty):
     value: Any
     _: KW_ONLY
     add_in_context: bool = False
@@ -26,7 +26,7 @@ class Variable(BaseProperty):
         self.value = value
 
 
-class Alias(BaseProperty):
+class Alias(BaseValueProperty):
     alias: Any
     _: KW_ONLY
     cache: bool = False
