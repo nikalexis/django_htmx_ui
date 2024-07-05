@@ -27,3 +27,6 @@ class Join(BaseWidget):
             getattr(ancestor, descriptor_name)
             for descriptor_name, member in ancestor.get_properties(include=self.include, exclude=self.exclude, filter=self.filter)
         ]
+
+    def __raw__(self):
+        return self.separator.join([str(c) for c in self.contents])

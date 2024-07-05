@@ -107,6 +107,9 @@ class BaseProperty(metaclass=BasePropertyMetaclass):
     def __context__(self):
         return self
 
+    def __str__(self):
+        raise NotImplementedError()
+
 
 @properties_dataclass
 class BasePropertyMixin(metaclass=BasePropertyMetaclass):
@@ -127,3 +130,6 @@ class BaseValueProperty(BaseProperty):
 
     def __context__(self):
         raise NotImplementedError()
+
+    def __str__(self):
+        return str(self.__context__())

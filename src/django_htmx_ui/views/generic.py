@@ -49,8 +49,8 @@ class BaseTemplateView(ExtendedTemplateView):
     def on_post(self, request, *args, **kwargs):
         pass
 
-    def render_to_response(self, context, **response_kwargs):
-        response = super().render_to_response(context, **response_kwargs)
+    def render_to_response(self, *args, **kwargs):
+        response = super().render_to_response(*args, **kwargs)
         return self.response_prepare(response)
 
     def response_location(self, *args, **kwargs):

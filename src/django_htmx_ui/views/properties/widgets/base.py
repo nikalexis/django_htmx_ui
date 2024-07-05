@@ -19,15 +19,11 @@ class BaseWidget(ExtendedTemplateResponseMixin, ExtendedContextMixin, BaseProper
     def get_template_names(self):
         return self._template_names_cro
 
-    def rendered_response(self):
-        response = self.render_to_response(
-            self.get_context_data()
-        )
-        response.render()
-        return Markup(response)
-
     def __html__(self):
-        return self.rendered_response()
+        return Markup(self.render_to_response())
+
+    def __str__(self):
+        return str(self.render_to_response())
 
     @property
     def slug_property(self):
