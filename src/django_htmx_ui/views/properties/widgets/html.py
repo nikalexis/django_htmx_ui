@@ -38,11 +38,12 @@ class HtmlAttribute(HtmlWidget):
 
 
 class HtmlAttributeId(HtmlAttribute):
+    value: ContextVariable = ContextVariable()
+    _: KW_ONLY
 
-    def __context__(self):
-        if self.value is NotDefined:
-            self.value = f'{self.slug_global}'
-        return super().__context__()
+    @value
+    def default_value(self):
+        return  f'{self.slug_global}'
 
 
 class HtmlContent(HtmlWidget):
