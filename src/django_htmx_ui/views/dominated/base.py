@@ -1,4 +1,4 @@
-from dominate.tags import attr
+from dominate.tags import attr, get_current
 
 
 class BaseDominated:
@@ -51,13 +51,19 @@ class BaseDirective:
     def __set__(self, instance, value):
         self.__call__(value)
 
-    def get_attr(self, value):
+    def full_directive(self):
+        return f"{self.prefix}{self.directive}"
+
+    def make_attr(self, value):
         return {
-            f"{self.prefix}{self.directive}": value
+            self.full_directive(): value
         }
 
+    def current_attr(self):
+        return get_current().attributes.get(self.full_directive(), None)
+
     def __call__(self, value):
-        attr(**self.get_attr(value))
+        attr(**self.make_attr(value))
         return self.instance
 
 
@@ -75,8 +81,8 @@ class BaseModifierMixin:
         self.__call__(value)
         return self
 
-    def get_attr(self, value):
-        attr = super().get_attr(value)
+    def make_attr(self, value):
+        attr = super().make_attr(value)
         
         if self.modifier:
             attr = {
