@@ -10,7 +10,7 @@ from django_htmx_ui.views.dominated.html_attrs import HtmlAttrsDominated
 class template(html_tag):
     pass
 
-html_attrs = my = HtmlAttrsDominated()
+html_attrs = this = HtmlAttrsDominated()
 
 alpine = x = AlpineDominated()
 
