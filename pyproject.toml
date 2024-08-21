@@ -21,6 +21,7 @@ dependencies = [
     'django_htmx >= 1.13.0',
     'humanize >= 4.6.0',
     'dominate >= 2.9.1',
+    'cssutils' >= 2.11.1,
 ]
 
 [project.urls]
