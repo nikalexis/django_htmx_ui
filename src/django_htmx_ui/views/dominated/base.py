@@ -26,7 +26,7 @@ class BaseDominated:
 
 class BaseDirective:
     
-    prefix = None
+    prefix = ''
     directive = None
     instance = None
 

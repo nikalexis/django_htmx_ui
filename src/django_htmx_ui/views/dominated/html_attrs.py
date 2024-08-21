@@ -3,7 +3,6 @@ import cssutils
 
 
 class KlassDirective(BaseDirective):
-    prefix = ''
 
     def get_classes(self):
         return [
@@ -44,7 +43,7 @@ class KlassDirective(BaseDirective):
 
 
 class StyleDirective(BaseDirective):
-    prefix = ''
+
     encoding='utf-8'
     normalize = True
 
@@ -126,5 +125,6 @@ class StyleDirective(BaseDirective):
 
 
 class HtmlAttrsDominated(BaseDominated):
+
     klass = class_ = KlassDirective()
     style = StyleDirective()
