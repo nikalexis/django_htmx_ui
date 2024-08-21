@@ -126,7 +126,5 @@ class StyleDirective(BaseDirective):
 
 
 class HtmlAttrsDominated(BaseDominated):
-    default_directive = 'klass'
-
     klass = class_ = KlassDirective()
     style = StyleDirective()
