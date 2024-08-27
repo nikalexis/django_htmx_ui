@@ -123,7 +123,11 @@ class BaseValueProperty(BaseProperty):
 
     def _get(self, instance, owner):
         home = list(self.ancestors)[-1]
+        # import inspect
+        # inspect._findclass(home)
+        # print(home, getattr(home, '__qualname__', None))
         if isinstance(home, BaseProperty) and not home.copy_of:
+            # print('home', home, home.owner)
             return self
         else:
             return self.__context__()
