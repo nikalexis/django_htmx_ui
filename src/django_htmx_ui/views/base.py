@@ -8,7 +8,7 @@ from django.template.response import TemplateResponse
 from django_htmx_ui.utils import ContextCachedProperty, ContextProperty, to_snake_case
 from django_htmx_ui.views.managers.context import ContextManager
 from dominate.util import container
-from django_htmx_ui.views.dominated.html import *
+from dominate.all import *
 
 
 class RawResponse(HttpResponse):
